@@ -87,6 +87,13 @@ void memory_close_node (struct node * this) {
     
 }
 
+/* it creates a new directory given the parent node and the dir name */
+void make_directory(struct node * parent, char * dir_name) {
+    struct node * child = new_node(dir_name);
+    parent->child = child;
+    child->parent = parent;
+}
+
 
 // ######### MEMORY GIVEN FUNCTIONS TO IMPLEMENT ##########
 
@@ -109,6 +116,7 @@ void memory_vfs_close(struct vfs* root) {
 }
 
 int memory_vfs_mkdir(struct vfs* root, const char* path) {
+    struct node * current_node = root->root;
     int path_len = (int)strlen(path);
     int start = 0;
     printf("%s\n", path);
@@ -118,12 +126,12 @@ int memory_vfs_mkdir(struct vfs* root, const char* path) {
             char * dir = malloc(len*sizeof(char));
 //            memcpy(dir, &path[start], len);
             strncpy(dir, &path[start], len);
-//            printf("%lu\n", strlen(dir));
-            printf("%s\n", dir);
+            make_directory(current_node, dir);
+            current_node = current_node->child;
+            printf("%s\n", current_node->name);
             start = c+1;
         }
     }
-//    printf("%lu\n", strlen(path));
 
     // root->root
     // 1 success 0 failure
