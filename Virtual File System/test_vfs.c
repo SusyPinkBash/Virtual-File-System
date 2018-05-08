@@ -37,14 +37,17 @@ assert_folder(const char* path)
 int
 main()
 {
-    struct vfs * vfs = vfs_open(VFS_MEMORY, "/root");
-    assert(vfs);
-//    printf("first worked\n");
-    vfs_mkdir(vfs, "l1/l2/l3");
     
-    vfs_close(vfs);
-//    printf("no more vfs => worked \n");
+//    struct vfile *f, *f2;
+    struct vfs*   Mvfs = vfs_open(VFS_MEMORY, "/tmp");
     
+    assert(Mvfs);
+//    assert(vfs_mkdir(vfs, "l1/l2/l3"));
+    assert(vfs_mkdir(Mvfs, "l1"));
+    assert(vfs_mkdir(Mvfs, "l1/l2"));
+    assert(vfs_mkdir(Mvfs, "l1/l2/l3"));
+    assert(vfs_mkdir(Mvfs, "l1/l2/l4"));
+
     /*
     struct vfile *f, *f2;
     struct vfs*   vfs = vfs_open(VFS_DISK, "/tmp");

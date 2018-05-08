@@ -8,7 +8,7 @@
 
 #include "VFS.h"
 #include "VFS_impl.h"
-#include "VFS_MEMORY.h"
+//#include "VFS_MEMORY.h"
 #include "VFS_DISK.h"
 
 
@@ -35,18 +35,21 @@ struct vfile* vfile_open (struct vfs* root, const char* file_name) {
     return root->vtable->vfile_open(root, file_name);
 }
 
-//int vfile_write (struct vfile* f, const char* data, size_t data_len) {
-//
-//}
-//
-//int vfile_append (struct vfile* f, const char* data, size_t data_len) {
-//
-//}
-//
-//size_t vfile_read (struct vfile* f, const char* data, size_t data_len) {
-//
-//}
-//
-//void vfile_close (struct vfile* f) {
-//
-//}
+int vfile_write (struct vfile* f, const char* data, size_t data_len) {
+  // TODO
+    return -1;
+}
+
+int vfile_append (struct vfile* f, const char* data, size_t data_len) {
+    // TODO
+    return -1;
+}
+
+size_t vfile_read (struct vfile* f, const char* data, size_t data_len) {
+    // TODO
+    return -1;
+}
+
+void vfile_close (struct vfile* f) {
+    // TODO
+}

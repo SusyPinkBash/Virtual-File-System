@@ -16,14 +16,16 @@ struct VFS_vtable {
 };
 
 
+
 struct vfs {
     const struct VFS_vtable * vtable;
     struct node * root;
 };
 
+
 struct node {
     const char * name;
-    struct node * parent;
+//    struct node * parent;
     struct node * next;
     struct node * child;
 };
