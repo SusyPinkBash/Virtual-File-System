@@ -32,12 +32,12 @@ struct vfile {
     enum vfs_type type;
     const char * name;
     const char * data;
+    struct vfile * next;
 };
 
 
 struct directory {
     const char * name;
-//    struct node * parent;
     struct directory * next;
     struct directory * child;
     struct vfile * vfile;

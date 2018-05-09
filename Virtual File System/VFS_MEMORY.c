@@ -27,7 +27,10 @@
 //};
 
 
+
+
 // ########## HELPER FUNCTIONS ##########
+
 
 // ##### VFS #####
 
@@ -55,7 +58,7 @@ struct vfs * new_vfs_struct() {
 };
 
 /* allocates memory for a new node with nulls */
-struct directory * new_node(const char* folder, size_t len) {
+struct directory * new_directory(const char* folder, size_t len) {
     struct directory * this = malloc(sizeof(struct directory));
     if (this) {
         char * name = malloc(len*sizeof(char));
@@ -63,47 +66,49 @@ struct directory * new_node(const char* folder, size_t len) {
         this->name = name;
         this->next = NULL;
         this->child = NULL;
-//        this->parent = NULL;
+        this->vfile = NULL;
     }
     return this;
 }
 
 /* releases the memory of the given node */
-void destroy_node(struct directory * this) {
+void destroy_dir(struct directory * this) {
     printf("freeing node: %s\n", this->name);
     if (this) {
         free((void *)this->name);
-//        this->child = NULL;
-//        this->next = NULL;
         free(this);
-
     }
 }
 
+
+
 /* recursive functions that releases all the memory given a root vfs pointer */
-void memory_close_node (struct directory * this) {
+void memory_close_directory (struct directory * this) {
     if (this != NULL) {
         if (this->next) {
-            memory_close_node(this->next);
+            destroy_dir(this->next);
             this->next = NULL;
         }
         if (this->child) {
-            memory_close_node(this->child);
+            destroy_dir(this->child);
             this->child = NULL;
         }
-        destroy_node(this);
+        // TODO FILE
+        if (this->vfile)
+            destroy_file_list(this->vfile);
+        destroy_dir(this);
 
     }
 }
 
 /* it creates a new directory given the parent node and the dir name */
 struct directory * make_directory_child(struct directory * parent, char * dir_name, size_t len) {
-    struct directory * child = new_node(dir_name, len);
+    struct directory * child = new_directory(dir_name, len);
     parent->child = child;
     return child;
 }
 struct directory * make_directory_brother(struct directory * before, char * dir_name, size_t len) {
-    struct directory * brother = new_node(dir_name, len);
+    struct directory * brother = new_directory(dir_name, len);
     before->next = brother;
     return brother;
 }
@@ -129,12 +134,34 @@ struct vfile * new_vfile_struct(char * name, size_t len) {
         strncpy(title, name, len);
         this->name = title;
         this->data = NULL;
+        this->next = NULL;
+        this->type = VFS_MEMORY;
         
     }
     
     return this;
 };
 
+
+/* releases the memory of the given file */
+void destroy_vfile(struct vfile * file) {
+    if (file) {
+        free((void *)file->name);
+        free((void *)file->data);
+        free(file);
+    }
+}
+
+
+/* recursive functions that releases all the memory given a vfile pointer */
+void destroy_file_list (struct vfile * this) {
+    if (this->next != NULL) {
+        destroy_file_list(this->next);
+        this->next = NULL;
+    }
+    
+    destroy_vfile(this);
+}
 
 
 
@@ -146,14 +173,14 @@ struct vfs* memory_vfs_open(enum vfs_type type, const char* root_folder) {
         printf("error\n");
         return NULL;
     }
-    this->root = new_node(root_folder, strlen(root_folder));
+    this->root = new_directory(root_folder, strlen(root_folder));
     
     return this;
     
 }
 
 void memory_vfs_close(struct vfs* root) {
-    memory_close_node(root->root);
+    memory_close_directory(root->root);
     if (root) {
         free(root);
     }
@@ -261,12 +288,35 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
             char * name = malloc(len*sizeof(char));
             strncpy(name, &file_name[start], len);
             
-            
-            // check for file or creates if
-            
-            struct vfile * file = new_vfile_struct(name, len);
-
-            free(name);
+            if (current_dir->vfile) {
+                struct vfile * current_file = current_dir->vfile;
+                int caffe = 1;
+                while (caffe) {
+                   if (!strcmp(current_file->name, name)) {
+                        return current_file;
+                    }
+                   else if (current_file->next == NULL) {
+                       caffe = 0;
+                   }
+                    else
+                        current_file = current_file->next;
+                }
+                // create file and append to current_file
+                struct vfile * brother_file = new_vfile_struct(name, len);
+                current_file->next = brother_file;
+                free(name);
+                printf("created %s\n", brother_file->name);
+                return brother_file;
+                
+            }
+            else {
+                // no files, create one and add it to dir
+                struct vfile * child_file = new_vfile_struct(name, len);
+                current_dir->vfile = child_file;
+                free(name);
+                printf("created %s\n", child_file->name);
+                return child_file;
+            }
             
         }
     }

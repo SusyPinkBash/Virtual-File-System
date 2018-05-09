@@ -28,4 +28,9 @@ int memory_vfile_append(struct vfile* f, const char* data, size_t data_len);
 size_t memory_vfile_read(struct vfile* f, const char* data, size_t data_len);
 void memory_vfile_close(struct vfile* f);
 
+// other functions declarations
+void destroy_file_list (struct vfile * this);
+void destroy_vfile(struct vfile * file);
+
+
 #endif /* VFS_MEMORY_h */

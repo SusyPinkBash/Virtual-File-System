@@ -36,7 +36,7 @@
 int
 main()
 {
-    struct vfile *f;
+    struct vfile *f, *f2;
     struct vfs*   vfs = vfs_open(VFS_MEMORY, "/tmp");
     
     assert(vfs);
@@ -46,6 +46,7 @@ main()
     assert(vfs_mkdir(vfs, "l1/l4"));
 //    vfs_close(vfs);
     f = vfile_open(vfs, "l1/l2/first.txt");
+    f2 = vfile_open(vfs, "l1/l2/second.txt");
     
     
     
