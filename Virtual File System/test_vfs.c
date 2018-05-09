@@ -5,7 +5,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-/*
+
 static const char* txt1 =
 "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
 "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
@@ -32,22 +32,28 @@ assert_folder(const char* path)
     return (stat(path, &s) == 0 && S_ISDIR(s.st_mode) && (s.st_mode & S_IRUSR) &&
             (s.st_mode & S_IWUSR) && (s.st_mode & S_IXUSR));
 }
-*/
+
 
 int
 main()
 {
+    struct vfile *f;
+    struct vfs*   vfs = vfs_open(VFS_MEMORY, "/tmp");
     
-//    struct vfile *f, *f2;
-    struct vfs*   Mvfs = vfs_open(VFS_MEMORY, "/tmp");
-    
-    assert(Mvfs);
-//    assert(vfs_mkdir(vfs, "l1/l2/l3"));
-    assert(vfs_mkdir(Mvfs, "l1"));
-    assert(vfs_mkdir(Mvfs, "l1/l2"));
-    assert(vfs_mkdir(Mvfs, "l1/l2/l3"));
-    assert(vfs_mkdir(Mvfs, "l1/l2/l4"));
+    assert(vfs);
+    assert(vfs_mkdir(vfs, "l1"));
+    assert(vfs_mkdir(vfs, "l1/l2"));
+    assert(vfs_mkdir(vfs, "l1/l2/l3"));
 
+        vfs_close(vfs);
+//    vfs_mkdir(vfs, "a/b/c");
+//    assert(vfs_mkdir(vfs, "l1/l2"));
+//    assert(vfs_mkdir(vfs, "l1/l2/l3"));
+//    assert(vfs_mkdir(vfs, "l1/l2/l4"));
+//    assert_folder("/tmp/l1/l2/l3");
+//    f = vfile_open(vfs, "/l1/l2/first.txt");
+    printf("end\n");
+    // ##########################################
     /*
     struct vfile *f, *f2;
     struct vfs*   vfs = vfs_open(VFS_DISK, "/tmp");
@@ -85,6 +91,7 @@ main()
     printf("Don't forget to remove the folder '/tmp/l1' before running the test "
            "again!\n");
     return EXIT_SUCCESS;
-    */
+     */
+    
 }
 

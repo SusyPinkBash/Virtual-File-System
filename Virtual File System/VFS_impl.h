@@ -9,6 +9,10 @@ struct VFS_vtable {
     int (*vfs_mkdir) (struct vfs* root, const char* path);
     void (*vfs_close) (struct vfs* root);
     struct vfile* (*vfile_open) (struct vfs* root, const char* file_name);
+    
+};
+
+struct VFILE_vtable {
     int (*vfile_write) (struct vfile* file, const char* data, size_t data_len);
     int (*vfile_append) (struct vfile* file, const char* data, size_t data_len);
     size_t (*vfile_read) (struct vfile* file, const char* data, size_t data_len);
@@ -20,6 +24,15 @@ struct VFS_vtable {
 struct vfs {
     const struct VFS_vtable * vtable;
     struct node * root;
+    enum vfs_type type;
+};
+
+struct vfile {
+    const struct VFILE_vtable * vtable;
+    enum vfs_type type;
+    const char * title;
+    const char * data;
+//    struct node * parent; 
 };
 
 

@@ -29,6 +29,8 @@
 
 // ########## HELPER FUNCTIONS ##########
 
+// ##### VFS #####
+
 /* checks if the input is equal to a string */
 int check_input(char * input, char * check) {
     int len = 6;
@@ -52,10 +54,6 @@ struct vfs * new_vfs_struct() {
         .vfs_mkdir = memory_vfs_mkdir,
         .vfs_close = memory_vfs_close,
         .vfile_open =  memory_vfile_open,
-        .vfile_write = memory_vfile_write,
-        .vfile_append = memory_vfile_append,
-        .vfile_read = memory_vfile_read,
-        .vfile_close = memory_vfile_close,
     };
     
     /* allocats memory for the MEMORY_VFS struct */
@@ -63,6 +61,7 @@ struct vfs * new_vfs_struct() {
     if (this) {
         this->vtable = &vtable;
         this->root = NULL;
+        this->type = VFS_MEMORY;
     }
 
     
@@ -70,10 +69,13 @@ struct vfs * new_vfs_struct() {
 };
 
 /* allocates memory for a new node with nulls */
-struct node * new_node(const char* root_folder) {
+struct node * new_node(const char* folder, size_t len) {
     struct node * this = malloc(sizeof(struct node));
     if (this) {
-        this->name = root_folder;
+        // TODO malloc
+        char * name = malloc(len*sizeof(char));
+        strncpy(name, folder, len);
+        this->name = name;
         this->next = NULL;
         this->child = NULL;
 //        this->parent = NULL;
@@ -84,6 +86,9 @@ struct node * new_node(const char* root_folder) {
 /* releases the memory of the given node */
 void destroy_node(struct node * this) {
     if (this) {
+        free(this->name);
+//        this->child = NULL;
+//        this->next = NULL;
         free(this);
         
     }
@@ -103,16 +108,64 @@ void memory_close_node (struct node * this) {
 }
 
 /* it creates a new directory given the parent node and the dir name */
-struct node * make_directory_child(struct node * parent, char * dir_name) {
-    struct node * child = new_node(dir_name);
+struct node * make_directory_child(struct node * parent, char * dir_name, size_t len) {
+    struct node * child = new_node(dir_name, len);
     parent->child = child;
     return child;
 }
-struct node * make_directory_brother(struct node * brother, char * dir_name) {
-    struct node * child = new_node(dir_name);
-    brother->next = child;
-    return child;
+struct node * make_directory_brother(struct node * before, char * dir_name, size_t len) {
+    struct node * brother = new_node(dir_name, len);
+    before->next = brother;
+    return brother;
 }
+
+//void memory_print_vfs(struct vfs * root) {
+//    struct node * current = root->root;
+//    printf("The root is: %s\n", current->name);
+//    int caffe = 1;
+//    int level = 0;
+//    while(caffe) {
+//        if (current == NULL) {
+//            caffe = 0;
+//            break;
+//        }
+//        printf("Level %d has: %s\n", level, current->name);
+//        if (current->next) {
+//            current = current->next;
+//        }
+//        else if (current->child) {
+//            ++level;
+//            current = current->child;
+//        }
+//        else {
+//            caffe = 0;
+//        }
+//    }
+//}
+
+// ##### VFILE #####
+/* creates a vfile struct with its vtable  */
+struct vfile * new_vfile_struct() {
+    /* vtable for the MEMORY_VFS vfs */
+    static const struct VFILE_vtable vtable = {
+        .vfile_write = memory_vfile_write,
+        .vfile_append = memory_vfile_append,
+        .vfile_read = memory_vfile_read,
+        .vfile_close = memory_vfile_close,
+    };
+    
+    /* allocats memory for the MEMORY_VFS struct */
+    struct vfile * this = malloc(sizeof(struct vfile));
+    if (this) {
+        this->vtable = &vtable;
+        this->title = "porcodio";
+        this->data = "porcamadonna dio cane schifoso";
+    }
+    
+    return this;
+};
+
+
 
 
 // ######### MEMORY GIVEN FUNCTIONS TO IMPLEMENT ##########
@@ -123,8 +176,8 @@ struct vfs* memory_vfs_open(enum vfs_type type, const char* root_folder) {
         printf("error\n");
         return NULL;
     }
-    this->root = new_node(root_folder);
-//    printf("%s\n", this->vfs.root->name);
+    this->root = new_node(root_folder, strlen(root_folder));
+    
     return this;
     
 }
@@ -136,57 +189,109 @@ void memory_vfs_close(struct vfs* root) {
 }
 
 int memory_vfs_mkdir(struct vfs* root, const char* path) {
+//    if (root->type != VFS_MEMORY)
+//        return 0;
     struct node * current_dir = root->root;
     int path_len = (int)strlen(path);
     int start = 0;
-//    printf("path: %s\n", path);
-    for (int c =0; c <= path_len; ++c) {
+    for (int c = 0; c <= path_len; ++c) {
         if ((path[c] == '/')|| (c==path_len)) {
             size_t len = c-start;
             char * dir = malloc(len*sizeof(char));
-//            memcpy(dir, &path[start], len);
+            // memcpy(dir, &path[start], len);
             strncpy(dir, &path[start], len);
-//            printf("dir: %s\n", dir);
-            
-            
             if (current_dir->child == NULL) {
-                current_dir = make_directory_child(current_dir, dir);
-                if (!current_dir)
+                current_dir = make_directory_child(current_dir, dir, len);
+                printf("Line: %d\n", __LINE__);
+                printf("created: %s\n", current_dir->name);
+                if (!current_dir){
+                    printf("error\n");
+                    free(dir);
                     return 0;
-//                printf("from if: %s\n", current_dir->name);
+                }
             }
             else {
-                struct node * child_dir = current_dir->child;
+                current_dir = current_dir->child;
                 int caffe = 1;
                 while (caffe) {
-                    if (!strcmp(child_dir->name, dir)) {
-                        // already exists
-                        current_dir = child_dir;
-//                        printf("exists already: %s\n", current_dir->name);
+                    if (!strcmp(current_dir->name, dir)) {
+                        // dir already exists
+                        printf("Line: %d\n", __LINE__);
                         caffe = 0;
                     }
-                    else if (child_dir->next == NULL) {
-                        current_dir = make_directory_brother(child_dir, dir);
-                        if (!current_dir)
+                    else if (current_dir->next == NULL) {
+                        current_dir = make_directory_brother(current_dir, dir, len);
+                         printf("Line: %d\n", __LINE__);
+                        if (!current_dir){
+                            printf("error\n");
+                            free(dir);
                             return 0;
-//                        printf("from else if: %s\n", current_dir->name);
+                        }
                         caffe = 0;
                     }
                     else
-                        child_dir = child_dir->next;
+                        current_dir = current_dir->next;
                 }
             }
+            free (dir);
             start = c+1;
+            if (current_dir->name == NULL)
+                printf("problem man\n");
         }
     }
-
-
+//    memory_print_vfs(root);
     return 1;
 }
 
 
 
 struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
+//    if (root->type != VFS_MEMORY)
+//        return NULL;
+    if (root->root == NULL)
+        return NULL;
+    struct node * current_dir = root->root;
+//    printf("first directorys is: %s\n", current_dir->child->name);
+    int path_len = (int)strlen(file_name);
+    int start = 0;
+    for (int c =0; c <= path_len; ++c) {
+        if (file_name[c] == '/') {
+            size_t len = c-start;
+            char * dir = malloc(len*sizeof(char));
+            if (current_dir->child == NULL)
+                return NULL;
+            
+            struct node * child_dir = current_dir->child;
+            int caffe = 1;
+            while (caffe) {
+                if (!strcmp(child_dir->name, dir)) {
+                    // already exists
+                    current_dir = child_dir;
+                    caffe = 0;
+                }
+                else if (child_dir->next == NULL) {
+                    caffe = 0;
+                    return 0;
+                }
+                else
+                    child_dir = child_dir->next;
+            }
+            
+            free(dir);
+            start = c +1;
+            printf("the current directorys is: %s\n", current_dir->name);
+        }
+        else if (c==path_len) {
+            size_t len = c-start;
+            char * name = malloc(len*sizeof(char));
+            printf("the file name is: %s\n", name);
+            free(name);
+            
+        }
+    }
+    
+    
+    
     // TODO
     return NULL;
 }

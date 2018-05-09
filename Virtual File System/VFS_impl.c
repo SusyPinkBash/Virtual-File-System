@@ -36,20 +36,17 @@ struct vfile* vfile_open (struct vfs* root, const char* file_name) {
 }
 
 int vfile_write (struct vfile* f, const char* data, size_t data_len) {
-  // TODO
-    return -1;
+    return f->vtable->vfile_write(f, data, data_len);
 }
 
 int vfile_append (struct vfile* f, const char* data, size_t data_len) {
-    // TODO
-    return -1;
+    return f->vtable->vfile_append(f, data, data_len);
 }
 
 size_t vfile_read (struct vfile* f, const char* data, size_t data_len) {
-    // TODO
-    return -1;
+    return f->vtable->vfile_read(f, data, data_len);
 }
 
 void vfile_close (struct vfile* f) {
-    // TODO
+    return f->vtable->vfile_close(f);
 }
