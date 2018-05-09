@@ -1,4 +1,3 @@
-
 #include "VFS.h"
 #include <assert.h>
 #include <stdio.h>
@@ -6,32 +5,32 @@
 #include <sys/stat.h>
 
 
-static const char* txt1 =
-"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
-"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
-"veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea "
-"commodo consequat. Duis aute irure dolor in reprehenderit in voluptate "
-"velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat "
-"cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id "
-"est laborum.";
-static const char* expected =
-"HELLO ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
-"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
-"veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea "
-"commodo consequat. Duis aute irure dolor in reprehenderit in voluptate "
-"velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat "
-"cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id "
-"est laborum.BYE";
-
-static char txt2[1024];
-
-static int
-assert_folder(const char* path)
-{
-    struct stat s;
-    return (stat(path, &s) == 0 && S_ISDIR(s.st_mode) && (s.st_mode & S_IRUSR) &&
-            (s.st_mode & S_IWUSR) && (s.st_mode & S_IXUSR));
-}
+//static const char* txt1 =
+//"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+//"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
+//"veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea "
+//"commodo consequat. Duis aute irure dolor in reprehenderit in voluptate "
+//"velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat "
+//"cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id "
+//"est laborum.";
+//static const char* expected =
+//"HELLO ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+//"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim "
+//"veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea "
+//"commodo consequat. Duis aute irure dolor in reprehenderit in voluptate "
+//"velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat "
+//"cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id "
+//"est laborum.BYE";
+//
+//static char txt2[1024];
+//
+//static int
+//assert_folder(const char* path)
+//{
+//    struct stat s;
+//    return (stat(path, &s) == 0 && S_ISDIR(s.st_mode) && (s.st_mode & S_IRUSR) &&
+//            (s.st_mode & S_IWUSR) && (s.st_mode & S_IXUSR));
+//}
 
 
 int
@@ -44,8 +43,12 @@ main()
     assert(vfs_mkdir(vfs, "l1"));
     assert(vfs_mkdir(vfs, "l1/l2"));
     assert(vfs_mkdir(vfs, "l1/l2/l3"));
-
-        vfs_close(vfs);
+    assert(vfs_mkdir(vfs, "l1/l4"));
+//    vfs_close(vfs);
+    f = vfile_open(vfs, "l1/l2/first.txt");
+    
+    
+    
 //    vfs_mkdir(vfs, "a/b/c");
 //    assert(vfs_mkdir(vfs, "l1/l2"));
 //    assert(vfs_mkdir(vfs, "l1/l2/l3"));

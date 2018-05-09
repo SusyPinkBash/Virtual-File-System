@@ -23,24 +23,24 @@ struct VFILE_vtable {
 
 struct vfs {
     const struct VFS_vtable * vtable;
-    struct node * root;
+    struct directory * root;
     enum vfs_type type;
 };
 
 struct vfile {
     const struct VFILE_vtable * vtable;
     enum vfs_type type;
-    const char * title;
+    const char * name;
     const char * data;
-//    struct node * parent; 
 };
 
 
-struct node {
+struct directory {
     const char * name;
 //    struct node * parent;
-    struct node * next;
-    struct node * child;
+    struct directory * next;
+    struct directory * child;
+    struct vfile * vfile;
 };
 
 
