@@ -40,7 +40,7 @@ int vfile_append(struct vfile* f, const char* data, size_t data_len);
 // Read up to data_len bytes from virtual file f and puts into data,
 // returning the number of bytes actually read.  A successive read to
 // the same virtual_file should continue from where previous one left.
-size_t vfile_read(struct vfile* f, const char* data, size_t data_len);
+size_t vfile_read(struct vfile* f, char* data, size_t data_len);
 
 // Closes the virtual file and frees all associated memory.  The
 // content of in-memory should be kept until the virtual file system

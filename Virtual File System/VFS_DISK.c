@@ -41,7 +41,7 @@ int disk_vfile_append(struct vfile* f, const char* data, size_t data_len) {
     return -1;
 }
 
-size_t disk_vfile_read(struct vfile* f, const char* data, size_t data_len) {
+size_t disk_vfile_read(struct vfile* f, char* data, size_t data_len) {
     return -1;
 }
 

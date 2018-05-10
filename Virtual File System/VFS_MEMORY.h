@@ -25,7 +25,7 @@ void memory_vfs_close(struct vfs* root);
 struct vfile* memory_vfile_open(struct vfs* root, const char* file_name);
 int memory_vfile_write(struct vfile* f, const char* data, size_t data_len);
 int memory_vfile_append(struct vfile* f, const char* data, size_t data_len);
-size_t memory_vfile_read(struct vfile* f, const char* data, size_t data_len);
+size_t memory_vfile_read(struct vfile* f, char* data, size_t data_len);
 void memory_vfile_close(struct vfile* f);
 
 // other functions declarations

@@ -43,7 +43,7 @@ int vfile_append (struct vfile* f, const char* data, size_t data_len) {
     return f->vtable->vfile_append(f, data, data_len);
 }
 
-size_t vfile_read (struct vfile* f, const char* data, size_t data_len) {
+size_t vfile_read (struct vfile* f, char* data, size_t data_len) {
     return f->vtable->vfile_read(f, data, data_len);
 }
 

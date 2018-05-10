@@ -15,7 +15,7 @@ struct VFS_vtable {
 struct VFILE_vtable {
     int (*vfile_write) (struct vfile* file, const char* data, size_t data_len);
     int (*vfile_append) (struct vfile* file, const char* data, size_t data_len);
-    size_t (*vfile_read) (struct vfile* file, const char* data, size_t data_len);
+    size_t (*vfile_read) (struct vfile* file, char* data, size_t data_len);
     void (*vfile_close) (struct vfile* file);
 };
 
@@ -29,10 +29,11 @@ struct vfs {
 
 struct vfile {
     const struct VFILE_vtable * vtable;
-    enum vfs_type type;
     const char * name;
-    const char * data;
+    char * data;
+    size_t length;
     struct vfile * next;
+    enum vfs_type type;
 };
 
 
