@@ -31,6 +31,16 @@
 
 // ########## HELPER FUNCTIONS ##########
 
+/* checks if the input is equal to a string */
+int check_words(const char * dir, char * to_check, size_t len) {
+    for (int i = 0; i<len; ++i) {
+        if (dir[i] != to_check[i])
+            return 0;
+    }
+    return 1;
+}
+
+
 
 // ##### VFS #####
 
@@ -216,7 +226,7 @@ int memory_vfs_mkdir(struct vfs* root, const char* path) {
                 current_dir = current_dir->child;
                 int caffe = 1;
                 while (caffe) {
-                    if (!strcmp(current_dir->name, dir)) {
+                    if (check_words(current_dir->name, dir,len)) {
                         // dir already exists
 //                        printf("Line: %d\n", __LINE__);
                         caffe = 0;
@@ -261,21 +271,22 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
             char * dir = malloc(len*sizeof(char));
             strncpy(dir, &file_name[start], len);
             if (current_dir->child == NULL) {
+                printf("return from %d with dir %s\n", __LINE__, dir);
                 free(dir);
-                printf("returnin from %d\n", __LINE__);
                 return NULL;
             }
             else {
                 current_dir = current_dir->child;
                 int caffe = 1;
                 while (caffe) {
-                    if (!strcmp(current_dir->name, dir)) {
+//                    if (!strcmp(current_dir->name, dir)) {
+                    if (check_words(current_dir->name, dir, len)) {
 //                        printf("Line: %d\n", __LINE__);
                         caffe = 0;
                     }
                     else if (current_dir->next == NULL) {
+                        printf("return from %d with dir %s\n", __LINE__, dir);
                         free(dir);
-                        printf("returnin from %d\n", __LINE__);
                         return NULL;
                     }
                     else
@@ -296,7 +307,8 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
                 struct vfile * current_file = current_dir->vfile;
                 int caffe = 1;
                 while (caffe) {
-                   if (!strcmp(current_file->name, name)) {
+//                   if (!strcmp(current_file->name, name)) {
+                    if (check_words(current_file->name, name, len)) {
                        free(name);
                        return current_file;
                     }
@@ -310,7 +322,8 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
                 struct vfile * brother_file = new_vfile_struct(name, len);
                 current_file->next = brother_file;
                 free(name);
-                printf("created %s\n", brother_file->name);
+                printf("created %s at line %d\n", brother_file->name, __LINE__);
+                printf("new brother file name: %s, left brother name: %s\n", brother_file->name, current_file->name);
                 return brother_file;
                 
             }
