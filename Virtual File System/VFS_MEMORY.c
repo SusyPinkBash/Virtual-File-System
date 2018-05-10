@@ -86,16 +86,18 @@ void destroy_dir(struct directory * this) {
 void memory_close_directory (struct directory * this) {
     if (this != NULL) {
         if (this->next) {
-            destroy_dir(this->next);
+            memory_close_directory(this->next);
             this->next = NULL;
         }
         if (this->child) {
-            destroy_dir(this->child);
+            memory_close_directory(this->child);
             this->child = NULL;
         }
         // TODO FILE
-        if (this->vfile)
+        if (this->vfile) {
             destroy_file_list(this->vfile);
+            this->vfile = NULL;
+        }
         destroy_dir(this);
 
     }
@@ -260,6 +262,7 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
             strncpy(dir, &file_name[start], len);
             if (current_dir->child == NULL) {
                 free(dir);
+                printf("returnin from %d\n", __LINE__);
                 return NULL;
             }
             else {
@@ -272,6 +275,7 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
                     }
                     else if (current_dir->next == NULL) {
                         free(dir);
+                        printf("returnin from %d\n", __LINE__);
                         return NULL;
                     }
                     else
@@ -293,7 +297,8 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
                 int caffe = 1;
                 while (caffe) {
                    if (!strcmp(current_file->name, name)) {
-                        return current_file;
+                       free(name);
+                       return current_file;
                     }
                    else if (current_file->next == NULL) {
                        caffe = 0;
@@ -314,14 +319,14 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
                 struct vfile * child_file = new_vfile_struct(name, len);
                 current_dir->vfile = child_file;
                 free(name);
-                printf("created %s\n", child_file->name);
+                printf("created %s at line %d\n", child_file->name, __LINE__);
                 return child_file;
             }
             
         }
     }
     
-    // TODO
+    printf("returnin from  %d\n", __LINE__);
     return NULL;
 }
 

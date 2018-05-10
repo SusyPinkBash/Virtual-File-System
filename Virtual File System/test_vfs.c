@@ -36,7 +36,7 @@
 int
 main()
 {
-    struct vfile *f, *f2;
+    struct vfile *f, *f2, *f3;
     struct vfs*   vfs = vfs_open(VFS_MEMORY, "/tmp");
     
     assert(vfs);
@@ -47,7 +47,14 @@ main()
 //    vfs_close(vfs);
     f = vfile_open(vfs, "l1/l2/first.txt");
     f2 = vfile_open(vfs, "l1/l2/second.txt");
+    f3 = vfile_open(vfs, "l1/l2/second.txt");
     
+    vfile_close(f);
+    vfile_close(f2);
+    vfile_close(f3);
+    
+    
+//        vfs_close(vfs);
     
     
 //    vfs_mkdir(vfs, "a/b/c");
@@ -57,11 +64,12 @@ main()
 //    assert_folder("/tmp/l1/l2/l3");
 //    f = vfile_open(vfs, "/l1/l2/first.txt");
     printf("end\n");
+    vfs_close(vfs);
+    
     // ##########################################
     /*
     struct vfile *f, *f2;
     struct vfs*   vfs = vfs_open(VFS_DISK, "/tmp");
-    
     assert(vfs);
     assert(vfs_mkdir(vfs, "l1/l2/l3") == 0);
     assert(vfs_mkdir(vfs, "l1"));

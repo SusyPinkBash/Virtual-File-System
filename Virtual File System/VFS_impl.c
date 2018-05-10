@@ -48,5 +48,5 @@ size_t vfile_read (struct vfile* f, const char* data, size_t data_len) {
 }
 
 void vfile_close (struct vfile* f) {
-    return f->vtable->vfile_close(f);
+    f->vtable->vfile_close(f);
 }
