@@ -9,13 +9,13 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Virtual File System/test_vfs.c"
-            timestampString = "547725189.773665"
+            filePath = "Virtual File System/test2.c"
+            timestampString = "547765998.53862"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "63"
-            endingLineNumber = "63"
-            landmarkName = "main"
+            startingLineNumber = "88"
+            endingLineNumber = "88"
+            landmarkName = "run_test"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>

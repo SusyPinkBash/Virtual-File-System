@@ -103,8 +103,10 @@
 //main()
 //{
 //  // removes the folder created by the FILE virtual file system
+//    /* comment cause not implemented yet
 //  system("rm -rf /tmp/test");
 //  run_test(VFS_DISK);
+//     */
 //  run_test(VFS_MEMORY);
 //
 //  return EXIT_SUCCESS;

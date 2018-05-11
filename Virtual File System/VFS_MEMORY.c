@@ -11,28 +11,30 @@
 #include <string.h>
 
 /*
-    struct vfs {
-        const struct VFS_vtable * vtable;
-        struct directory * root;
-        enum vfs_type type;
-    };
-
-    struct vfile {
-        const struct VFILE_vtable * vtable;
-        const char * name;
-        char * data;
-        size_t length;
-        struct vfile * next;
-        enum vfs_type type;
-    };
-
-
-    struct directory {
-        const char * name;
-        struct directory * next;
-        struct directory * child;
-        struct vfile * vfile;
-    };
+     struct vfs {
+     const struct VFS_vtable * vtable;
+     struct directory * root;
+     enum vfs_type type;
+     };
+ 
+     struct vfile {
+     const struct VFILE_vtable * vtable;
+     const char * name;
+     char * data;
+     size_t length;
+     size_t cursor;
+     int open;
+     struct vfile * next;
+     enum vfs_type type;
+     };
+ 
+ 
+     struct directory {
+     const char * name;
+     struct directory * next;
+     struct directory * child;
+     struct vfile * vfile;
+     };
  */
 
 
@@ -127,7 +129,6 @@ void memory_close_directory (struct directory * this) {
             memory_close_directory(this->child);
             this->child = NULL;
         }
-        // TODO FILE
         if (this->vfile) {
             destroy_file_list(this->vfile);
             this->vfile = NULL;
@@ -173,7 +174,9 @@ struct vfile * new_vfile_struct(char * name, size_t len) {
         this->name = title;
         this->data = NULL;
         this->next = NULL;
+        this->open = 1;
         this->length = 0;
+        this->cursor = 0;
         this->type = VFS_MEMORY;
     }
     
@@ -225,10 +228,83 @@ void memory_vfs_close(struct vfs* root) {
     }
 }
 
+/* mkdir that creates only the last folder and returns 0 if the previous ones do not exist */
 int memory_vfs_mkdir(struct vfs* root, const char* path) {
-//    printf("called with path: %s\n", path);
-//    if (root->type != VFS_MEMORY)
-//        return 0;
+    struct directory * current_dir = root->root;
+    int path_len = (int)strlen(path);
+    int start = 0;
+    for (int c = 0; c <= path_len; ++c) {
+        if (c==path_len) {
+            size_t len = c-start+1;
+            char * dir = malloc(len*sizeof(char));
+            copy_data(dir, &path[start], len);
+            if (current_dir->child == NULL) {
+                current_dir = make_directory_child(current_dir, dir, len);
+                printf("created: %s\n", current_dir->name);
+                if (!current_dir){
+                    printf("error\n");
+                    free(dir);
+                    return 0;
+                }
+            }
+            else {
+                current_dir = current_dir->child;
+                int caffe = 1;
+                while (caffe) {
+                    if (check_words(current_dir->name, dir,len)) {
+                        caffe = 0;
+                    }
+                    else if (current_dir->next == NULL) {
+                        current_dir = make_directory_brother(current_dir, dir, len);
+                        printf("created: %s\n", current_dir->name);
+                        if (!current_dir){
+                            printf("error\n");
+                            free(dir);
+                            return 0;
+                        }
+                        caffe = 0;
+                    }
+                    else
+                        current_dir = current_dir->next;
+                }
+            }
+        }
+        else if (path[c] == '/') {
+            size_t len = c-start+1;
+            char * dir = malloc(len*sizeof(char));
+            copy_data(dir, &path[start], len);
+            if (current_dir->child == NULL) {
+                free(dir);
+                return 0;
+            }
+            else {
+                current_dir = current_dir->child;
+                int caffe = 1;
+                while (caffe) {
+                    if (check_words(current_dir->name, dir,len)) {
+                        caffe = 0;
+                    }
+                    else if (current_dir->next == NULL) {
+                        free(dir);
+                        return 0;
+                    }
+                    else
+                        current_dir = current_dir->next;
+                }
+            }
+            free (dir);
+            start = c+1;
+            if (current_dir->name == NULL)
+                printf("problem man\n");
+        }
+    }
+    return 1;
+}
+
+
+
+/* uncomment if mkdir should create all folders and not just the last one
+int memory_vfs_mkdir(struct vfs* root, const char* path) {
     struct directory * current_dir = root->root;
     int path_len = (int)strlen(path);
     int start = 0;
@@ -275,7 +351,7 @@ int memory_vfs_mkdir(struct vfs* root, const char* path) {
     }
     return 1;
 }
-
+*/
 
 
 struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
@@ -327,7 +403,9 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
                 while (caffe) {
                     if (check_words(current_file->name, name, len)) {
                        free(name);
-                       return current_file;
+                        current_file->open = 1;
+//                        current_file->cursor = 0;
+                        return current_file;
                     }
                    else if (current_file->next == NULL) {
                        caffe = 0;
@@ -360,46 +438,38 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
 }
 
 int memory_vfile_write(struct vfile* f, const char* data, size_t data_len) {
-    if (!f)
+    if ((!f) || (f->open == 0))
         return 0;
     if (!f->data) {
         char * buffer = malloc((data_len+1)*sizeof(char));
         copy_data(buffer, data, data_len+1);
         f->data = buffer;
         f->length = data_len;
+        f->cursor = data_len;
     }
-    else if (f->length > data_len) {
+    else if (f->length > f->cursor + data_len) {
         char * buffer = f->data;
-        copy_data_no_end_char(buffer, data, data_len+1);
+        copy_data_no_end_char(&buffer[f->cursor], data, data_len+1);
         f->data = buffer;
+        f->cursor = f->cursor + data_len;
     }
     else {
         char * buffer = f->data;
-        buffer = realloc(buffer, data_len+1);
-        copy_data(buffer, data, data_len+1);
-        f->length = data_len;
+        buffer = realloc(buffer, f->cursor + data_len+1);
+        copy_data(&buffer[f->cursor], data, data_len+1);
+        f->length = f->cursor + data_len;;
+        f->cursor = f->length;
         f->data = buffer;
     }
     
     if (!f->data) {
         return 0;
     }
-//    printf("%c + ", f->data[f->length]);
-//    for (int i =0; i <f->length; i++) {
-//        if (f->data[i] == '\0') {
-//            printf("0 found at char %d\n", i);
-//        }
-//    }
-//
-//    if (f->data[f->length] == '\0')
-//        printf("o yes\n");
-//    else
-//        printf("no o\n");
     return 1;
 }
 
 int memory_vfile_append(struct vfile* f, const char* data, size_t data_len) {
-    if (!f)
+    if ((!f) || (f->open == 0))
         return 0;
     if (!f->data) {
         char * buffer = malloc((data_len+1)*sizeof(char));
@@ -416,27 +486,30 @@ int memory_vfile_append(struct vfile* f, const char* data, size_t data_len) {
         f->length = len;
     }
     
+    f->cursor = f->length;
+    
     if (!f->data) {
         return 0;
     }
-//    printf("%c + ", f->data[f->length]);
-//    for (int i =0; i <f->length; i++) {
-//        if (f->data[i] == '\0') {
-//            printf("0 found at char %d\n", i);
-//        }
-//    }
-//    
-//    if (f->data[f->length] == '\0')
-//        printf("o yes\n");
-//    else
-//        printf("no o\n");
     return 1;
 }
 
 size_t memory_vfile_read(struct vfile* f, char* data, size_t data_len) {
+    if ((!f) || (f->open == 0) || (!f->data))
+        return 0;
     // TODO not sure what I have to do;
-    return -1;
+//    (IFEXPRESSION) ? (THENEXPR) : (ELSEEXPR);
+    size_t to_read;
+    (f->length > f->cursor + data_len) ? (to_read = data_len) : (to_read = f->length);
+    copy_data_no_end_char(data, &f->data[f->cursor], to_read+1);
+    f->cursor = f->cursor + to_read;
+    
+    return to_read;
 }
 
 void memory_vfile_close(struct vfile* f) {
+    if (f) {
+        f->open = 0;
+        f->cursor = 0;
+    }
 }

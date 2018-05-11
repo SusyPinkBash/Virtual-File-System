@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "vfs.h"
 
+
 struct VFS_vtable {
     struct vfs* (* vfs_open) (enum vfs_type type, const char* root_folder);
     int (*vfs_mkdir) (struct vfs* root, const char* path);
@@ -32,6 +33,8 @@ struct vfile {
     const char * name;
     char * data;
     size_t length;
+    size_t cursor;
+    int open; 
     struct vfile * next;
     enum vfs_type type;
 };
