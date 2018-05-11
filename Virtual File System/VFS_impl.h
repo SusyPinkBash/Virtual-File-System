@@ -2,7 +2,7 @@
 #define VFS_impl_h
 
 #include <stdio.h>
-#include "VFS.h"
+#include "vfs.h"
 
 struct VFS_vtable {
     struct vfs* (* vfs_open) (enum vfs_type type, const char* root_folder);

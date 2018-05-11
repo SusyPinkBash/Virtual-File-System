@@ -6,9 +6,8 @@
 //  Copyright © 2018 Susanna Ardigo'. All rights reserved.
 //
 
-#include "VFS.h"
+#include "vfs.h"
 #include "VFS_impl.h"
-//#include "VFS_MEMORY.h"
 #include "VFS_DISK.h"
 
 

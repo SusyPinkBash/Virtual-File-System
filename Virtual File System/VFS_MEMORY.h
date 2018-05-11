@@ -12,7 +12,7 @@
 #include <stdio.h>
 
 #ifndef VFS_H_INCLUDED
-#include "VFS.h"
+#include "vfs.h"
 #endif /* included vfs */
 
 #include "VFS_MEMORY.h"

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D472A81C20A58D1300880568 /* test2.c in Sources */ = {isa = PBXBuildFile; fileRef = D472A81A20A58D1200880568 /* test2.c */; };
+		D472A81D20A58D1300880568 /* test1.c in Sources */ = {isa = PBXBuildFile; fileRef = D472A81B20A58D1200880568 /* test1.c */; };
 		D4913DAF20A0807A00B50445 /* test_vfs.c in Sources */ = {isa = PBXBuildFile; fileRef = D4913DAE20A0807A00B50445 /* test_vfs.c */; };
 		D4913DBA20A08A8E00B50445 /* VFS_impl.c in Sources */ = {isa = PBXBuildFile; fileRef = D4913DB920A08A8E00B50445 /* VFS_impl.c */; };
 		D4913DBD20A0914400B50445 /* VFS_DISK.c in Sources */ = {isa = PBXBuildFile; fileRef = D4913DBC20A0914400B50445 /* VFS_DISK.c */; };
@@ -27,7 +29,9 @@
 
 /* Begin PBXFileReference section */
 		D41F9F9E209B410100713124 /* Virtual File System */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Virtual File System"; sourceTree = BUILT_PRODUCTS_DIR; };
-		D47D092B209B419800E61C54 /* VFS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VFS.h; sourceTree = "<group>"; };
+		D472A81920A58AF300880568 /* vfs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vfs.h; sourceTree = "<group>"; };
+		D472A81A20A58D1200880568 /* test2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = test2.c; sourceTree = "<group>"; };
+		D472A81B20A58D1200880568 /* test1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = test1.c; sourceTree = "<group>"; };
 		D4913DAE20A0807A00B50445 /* test_vfs.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = test_vfs.c; sourceTree = "<group>"; };
 		D4913DB820A08A8E00B50445 /* VFS_impl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VFS_impl.h; sourceTree = "<group>"; };
 		D4913DB920A08A8E00B50445 /* VFS_impl.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = VFS_impl.c; sourceTree = "<group>"; };
@@ -67,7 +71,7 @@
 		D41F9FA0209B410100713124 /* Virtual File System */ = {
 			isa = PBXGroup;
 			children = (
-				D47D092B209B419800E61C54 /* VFS.h */,
+				D472A81920A58AF300880568 /* vfs.h */,
 				D4913DB820A08A8E00B50445 /* VFS_impl.h */,
 				D4913DB920A08A8E00B50445 /* VFS_impl.c */,
 				D4913DBE20A0915300B50445 /* VFS_MEMORY.h */,
@@ -75,6 +79,8 @@
 				D4913DBB20A0914400B50445 /* VFS_DISK.h */,
 				D4913DBC20A0914400B50445 /* VFS_DISK.c */,
 				D4913DAE20A0807A00B50445 /* test_vfs.c */,
+				D472A81B20A58D1200880568 /* test1.c */,
+				D472A81A20A58D1200880568 /* test2.c */,
 			);
 			path = "Virtual File System";
 			sourceTree = "<group>";
@@ -135,8 +141,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D472A81C20A58D1300880568 /* test2.c in Sources */,
 				D4913DC020A0915300B50445 /* VFS_MEMORY.c in Sources */,
 				D4913DBD20A0914400B50445 /* VFS_DISK.c in Sources */,
+				D472A81D20A58D1300880568 /* test1.c in Sources */,
 				D4913DAF20A0807A00B50445 /* test_vfs.c in Sources */,
 				D4913DBA20A08A8E00B50445 /* VFS_impl.c in Sources */,
 			);

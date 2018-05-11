@@ -10,21 +10,31 @@
 #include "VFS_impl.h"
 #include <string.h>
 
-//struct MEMORY_VFS {
-//    struct vfs vfs;
-//};
+/*
+    struct vfs {
+        const struct VFS_vtable * vtable;
+        struct directory * root;
+        enum vfs_type type;
+    };
 
-//struct vfs {
-//    const struct VFS_vtable * vtable;
-//    const struct node * root;
-//};
-//
-//struct node {
-//    const char * name;
-//    struct node * parent;
-//    struct node * next;
-//    struct node * child;
-//};
+    struct vfile {
+        const struct VFILE_vtable * vtable;
+        const char * name;
+        char * data;
+        size_t length;
+        struct vfile * next;
+        enum vfs_type type;
+    };
+
+
+    struct directory {
+        const char * name;
+        struct directory * next;
+        struct directory * child;
+        struct vfile * vfile;
+    };
+ */
+
 
 
 
@@ -40,24 +50,20 @@ int check_words(const char * dir, char * to_check, size_t len) {
     return 1;
 }
 
-/* copies a string inside another string with the given length */
-void * copy_string(char * to, const char * from, size_t len) {
+/* copies a char data inside another char data with the given length without an end character*/
+void * copy_data_no_end_char(char * to, const char * from, size_t len) {
     for (int i = 0; i < len-1; ++i) {
         to[i] = from[i];
     }
+    return to;
+}
+
+/* copies a char data inside another char data with the given length and adds at the end the end character */
+void * copy_data(char * to, const char * from, size_t len) {
+    copy_data_no_end_char(to, from, len);
     to[len-1] = '\0';
     return to;
 }
-
-/* copies a char data inside another char data with the given length */
-void * copy_data(char * to, char * from, size_t len) {
-    for (int i = 0; i < len-1; ++i) {
-        to[i] = from[i];
-    }
-    to[len-1] = EOF;
-    return to;
-}
-
 
 
 
@@ -89,7 +95,7 @@ struct directory * new_directory(const char* folder, size_t len) {
     struct directory * this = malloc(sizeof(struct directory));
     if (this) {
         char * name = malloc(len*sizeof(char));
-        copy_string(name, folder, len);
+        copy_data(name, folder, len);
 //        strncpy(name, folder, len);
         this->name = name;
         this->next = NULL;
@@ -163,7 +169,7 @@ struct vfile * new_vfile_struct(char * name, size_t len) {
     if (this) {
         this->vtable = &vtable;
         char * title = malloc(len*sizeof(char));
-        copy_string(title, name, len);
+        copy_data(title, name, len);
         this->name = title;
         this->data = NULL;
         this->next = NULL;
@@ -230,7 +236,7 @@ int memory_vfs_mkdir(struct vfs* root, const char* path) {
         if ((path[c] == '/')|| (c==path_len)) {
             size_t len = c-start+1;
             char * dir = malloc(len*sizeof(char));
-            copy_string(dir, &path[start], len);
+            copy_data(dir, &path[start], len);
             if (current_dir->child == NULL) {
                 current_dir = make_directory_child(current_dir, dir, len);
                 printf("created: %s\n", current_dir->name);
@@ -286,7 +292,7 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
             }
             size_t len = c-start+1;
             char * dir = malloc(len*sizeof(char));
-            copy_string(dir, &file_name[start], len);
+            copy_data(dir, &file_name[start], len);
             if (current_dir->child == NULL) {
                 free(dir);
                 return NULL;
@@ -313,7 +319,7 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
         else if (c==path_len) {
             size_t len = c-start+1;
             char * name = malloc((1+len)*sizeof(char));
-            copy_string(name, &file_name[start], len+1);
+            copy_data(name, &file_name[start], len+1);
             
             if (current_dir->vfile) {
                 struct vfile * current_file = current_dir->vfile;
@@ -356,16 +362,39 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
 int memory_vfile_write(struct vfile* f, const char* data, size_t data_len) {
     if (!f)
         return 0;
-    if (f->data)
-        free((void*)f->data);
-    char * buffer = malloc((data_len+1)*sizeof(char));
-    copy_string(buffer, data, data_len+1);
-    f->data = buffer;
-    f->length = data_len;
     if (!f->data) {
-        free(buffer);
+        char * buffer = malloc((data_len+1)*sizeof(char));
+        copy_data(buffer, data, data_len+1);
+        f->data = buffer;
+        f->length = data_len;
+    }
+    else if (f->length > data_len) {
+        char * buffer = f->data;
+        copy_data_no_end_char(buffer, data, data_len+1);
+        f->data = buffer;
+    }
+    else {
+        char * buffer = f->data;
+        buffer = realloc(buffer, data_len+1);
+        copy_data(buffer, data, data_len+1);
+        f->length = data_len;
+        f->data = buffer;
+    }
+    
+    if (!f->data) {
         return 0;
     }
+//    printf("%c + ", f->data[f->length]);
+//    for (int i =0; i <f->length; i++) {
+//        if (f->data[i] == '\0') {
+//            printf("0 found at char %d\n", i);
+//        }
+//    }
+//
+//    if (f->data[f->length] == '\0')
+//        printf("o yes\n");
+//    else
+//        printf("no o\n");
     return 1;
 }
 
@@ -373,19 +402,34 @@ int memory_vfile_append(struct vfile* f, const char* data, size_t data_len) {
     if (!f)
         return 0;
     if (!f->data) {
-        return memory_vfile_write(f, data, data_len);
+        char * buffer = malloc((data_len+1)*sizeof(char));
+        copy_data(buffer, data, data_len+1);
+        f->data = buffer;
+        f->length = data_len;
     }
-    char * buffer = f->data;
-    size_t len =f->length + data_len;
-    buffer = realloc(buffer, len+1);
-    copy_string(&buffer[f->length], data, data_len+1);
-    f->data = buffer;
-    f->length = len;
+    else {
+        char * buffer = f->data;
+        size_t len =f->length + data_len;
+        buffer = realloc(buffer, len+1);
+        copy_data(&buffer[f->length], data, data_len+1);
+        f->data = buffer;
+        f->length = len;
+    }
     
     if (!f->data) {
-        free(buffer);
         return 0;
     }
+//    printf("%c + ", f->data[f->length]);
+//    for (int i =0; i <f->length; i++) {
+//        if (f->data[i] == '\0') {
+//            printf("0 found at char %d\n", i);
+//        }
+//    }
+//    
+//    if (f->data[f->length] == '\0')
+//        printf("o yes\n");
+//    else
+//        printf("no o\n");
     return 1;
 }
 
