@@ -67,6 +67,25 @@ void * copy_data(char * to, const char * from, size_t len) {
     return to;
 }
 
+//void remove_end_slash(char * string) {
+//    int i =  (int) strlen(string)-1;
+//    while (string[i] == '/')
+//    {
+//        string[i] = '\0';
+//        --i;
+//    }
+//    string = realloc(string, i+1);
+//}
+
+size_t get_length_without_slashes(const char *path) {
+    size_t i =  (int) strlen(path)-1;
+    while (path[i] == '/')
+    {
+        --i;
+    }
+    return i+1;
+}
+
 
 
 // ##### VFS #####
@@ -230,12 +249,26 @@ void memory_vfs_close(struct vfs* root) {
 
 /* mkdir that creates only the last folder and returns 0 if the previous ones do not exist */
 int memory_vfs_mkdir(struct vfs* root, const char* path) {
+    if (!root)
+        return 0;
     struct directory * current_dir = root->root;
-    int path_len = (int)strlen(path);
+    size_t path_len = (size_t)strlen(path);
     int start = 0;
+    printf("called dir with path: %s\n", path);
+//    printf("path length before: %zu\n", path_len);
+    path_len = get_length_without_slashes(path);
+//    char * new_path = malloc(strlen(path));
+//    copy_data_no_end_char(new_path, path, strlen(path)+1);
+//    remove_end_slash(new_path);
+//    printf("path length after: %zu\n", path_len);
+    
     for (int c = 0; c <= path_len; ++c) {
-        if (c==path_len) {
-            size_t len = c-start+1;
+        size_t len = c-start+1;
+        if ((path[c] == '/') && (len == 1)) {
+            start = c+1;
+            continue;
+        }
+        else if (c==path_len) {
             char * dir = malloc(len*sizeof(char));
             copy_data(dir, &path[start], len);
             if (current_dir->child == NULL) {
@@ -270,10 +303,10 @@ int memory_vfs_mkdir(struct vfs* root, const char* path) {
             }
         }
         else if (path[c] == '/') {
-            size_t len = c-start+1;
             char * dir = malloc(len*sizeof(char));
             copy_data(dir, &path[start], len);
             if (current_dir->child == NULL) {
+                // error if there are "/" after the dir
                 free(dir);
                 return 0;
             }
@@ -355,17 +388,19 @@ int memory_vfs_mkdir(struct vfs* root, const char* path) {
 
 
 struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
+    printf("called vfile with path: %s\n", file_name);
     if (root->root == NULL)
         return NULL;
     struct directory * current_dir = root->root;
     int path_len = (int)strlen(file_name);
-    int start = 0;
-    for (int c =0; c <= path_len; ++c) {
+    int not_started = 1;
+    for (int c =0, start = 0; c <= path_len; ++c) {
         if (file_name[c] == '/') {
-            if (c == 0 && current_dir->child) {
-                start = 1;
+            if (not_started == 1 && current_dir->child) {
+                start = c+1;
                 continue;
             }
+            not_started = 0;
             size_t len = c-start+1;
             char * dir = malloc(len*sizeof(char));
             copy_data(dir, &file_name[start], len);
