@@ -67,16 +67,6 @@ void * copy_data(char * to, const char * from, size_t len) {
     return to;
 }
 
-//void remove_end_slash(char * string) {
-//    int i =  (int) strlen(string)-1;
-//    while (string[i] == '/')
-//    {
-//        string[i] = '\0';
-//        --i;
-//    }
-//    string = realloc(string, i+1);
-//}
-
 size_t get_length_without_slashes(const char *path) {
     size_t i =  (int) strlen(path)-1;
     while (path[i] == '/')
@@ -85,7 +75,6 @@ size_t get_length_without_slashes(const char *path) {
     }
     return i+1;
 }
-
 
 
 // ##### VFS #####
@@ -117,7 +106,6 @@ struct directory * new_directory(const char* folder, size_t len) {
     if (this) {
         char * name = malloc(len*sizeof(char));
         copy_data(name, folder, len);
-//        strncpy(name, folder, len);
         this->name = name;
         this->next = NULL;
         this->child = NULL;
@@ -128,7 +116,6 @@ struct directory * new_directory(const char* folder, size_t len) {
 
 /* releases the memory of the given node */
 void destroy_dir(struct directory * this) {
-//    printf("freeing node: %s\n", this->name);
     if (this) {
         free((void *)this->name);
         free(this);
@@ -255,13 +242,7 @@ int memory_vfs_mkdir(struct vfs* root, const char* path) {
     size_t path_len = (size_t)strlen(path);
     int start = 0;
     printf("called dir with path: %s\n", path);
-//    printf("path length before: %zu\n", path_len);
     path_len = get_length_without_slashes(path);
-//    char * new_path = malloc(strlen(path));
-//    copy_data_no_end_char(new_path, path, strlen(path)+1);
-//    remove_end_slash(new_path);
-//    printf("path length after: %zu\n", path_len);
-    
     for (int c = 0; c <= path_len; ++c) {
         size_t len = c-start+1;
         if (c == 0 && path[c] == '/') {
@@ -271,11 +252,6 @@ int memory_vfs_mkdir(struct vfs* root, const char* path) {
             start = c+1;
             continue;
         }
-//        
-//        if ((path[c] == '/') && (len == 1)) {
-//            start = c+1;
-//            continue;
-//        }
         else if (c==path_len) {
             char * dir = malloc(len*sizeof(char));
             copy_data(dir, &path[start], len);
@@ -314,7 +290,6 @@ int memory_vfs_mkdir(struct vfs* root, const char* path) {
             char * dir = malloc(len*sizeof(char));
             copy_data(dir, &path[start], len);
             if (current_dir->child == NULL) {
-                // error if there are "/" after the dir
                 free(dir);
                 return 0;
             }
@@ -348,7 +323,8 @@ int memory_vfs_mkdir(struct vfs* root, const char* path) {
 
 
 
-/* uncomment if mkdir should create all folders and not just the last one
+/* uncomment if mkdir should create all folders and not just the last one */
+/*
 int memory_vfs_mkdir(struct vfs* root, const char* path) {
     struct directory * current_dir = root->root;
     int path_len = (int)strlen(path);
@@ -398,14 +374,13 @@ int memory_vfs_mkdir(struct vfs* root, const char* path) {
 }
 */
 
-
+/* uncomment if mkdir should create only the last folder */
 struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
     printf("called vfile with path: %s\n", file_name);
     if (root->root == NULL)
         return NULL;
     struct directory * current_dir = root->root;
     int path_len = (int)strlen(file_name);
-//    int not_started = 1;
     for (int c =0, start = 0; c <= path_len; ++c) {
         if (c == 0 && file_name[c] == '/') {
             while (file_name[c+1] == '/') {
@@ -415,11 +390,6 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
             continue;
         }
         else if (file_name[c] == '/') {
-//            if (not_started == 1 && current_dir->child) {
-//                start = c+1;
-//                continue;
-//            }
-//            not_started = 0;
             size_t len = c-start+1;
             char * dir = malloc(len*sizeof(char));
             copy_data(dir, &file_name[start], len);
@@ -443,7 +413,7 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
                 }
             }
             
-            free(dir);
+//            free(dir);
             while(file_name[c+1] == '/' && c < path_len)
             {
                 ++c;
@@ -451,7 +421,6 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
             start = c +1;
         }
         else if (c==path_len) {
-//            not_started = 0;
             size_t len = c-start+1;
             char * name = malloc((1+len)*sizeof(char));
             copy_data(name, &file_name[start], len+1);
@@ -481,7 +450,6 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
                 
             }
             else {
-//                not_started = 0;
                 // no files, create one and add it to dir
                 struct vfile * child_file = new_vfile_struct(name, len);
                 current_dir->vfile = child_file;
