@@ -37,7 +37,8 @@ struct vfile {
     int open; 
     struct vfile * next;
     enum vfs_type type;
-    int disk_file;
+    int fd;
+    char * full_path;
 };
 
 

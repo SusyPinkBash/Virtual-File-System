@@ -13,6 +13,8 @@
 #include "stdio.h"
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
+#include <dirent.h>
 
 /*
  struct vfs {
@@ -78,7 +80,7 @@ struct vfs * new_vfs_disk_struct(enum vfs_type type) {
 
 // ##### VFILE #####
 /* creates a vfile struct with its vtable  */
-struct vfile * new_vfile_disk_struct(char * name, size_t len, int file_call) {
+struct vfile * new_vfile_disk_struct(char * name, size_t len, int fd, char * full_path) {
     /* vtable for the MEMORY_VFS vfs */
     static const struct VFILE_vtable vtable = {
         .vfile_write = disk_vfile_write,
@@ -101,7 +103,8 @@ struct vfile * new_vfile_disk_struct(char * name, size_t len, int file_call) {
         this->length = 0;
         this->cursor = 0;
         this->type = VFS_MEMORY;
-        this->disk_file = file_call;
+        this->fd = fd;
+        this->full_path = full_path;
     }
     
     return this;
@@ -120,11 +123,16 @@ struct vfs* disk_vfs_open(enum vfs_type type, const char* root_folder) {
     }
     this->root = new_directory(root_folder, (strlen(root_folder)+1));
     
-//    Function: int mkdir (const char *filename, mode_t mode)
+    //    Function: int mkdir (const char *filename, mode_t mode)
     int success = mkdir(root_folder, S_IRWXU | S_IRGRP | S_IROTH);
-    if (success != 0)
-        return NULL;
-    
+        if (success != 0 && opendir(root_folder) == NULL) {
+            free(this);
+            return NULL;
+        }
+//        if (success != 0) {
+//            free(this);
+//            return NULL;
+//        }
     return this;
 }
 
@@ -153,8 +161,12 @@ int disk_vfs_mkdir(struct vfs* root, const char* path) {
                 // physically create dir
                 char * full_path = get_full_path(root->root->name, path);
                 int success = mkdir(full_path,S_IRWXU | S_IRGRP | S_IROTH);
+                if (success != 0 && opendir(full_path) == NULL) {
+                    free(dir);
+                    return 0;
+                }
                 free(full_path);
-                if (!current_dir || success != 0){
+                if (!current_dir){
                     printf("error\n");
                     free(dir);
                     return 0;
@@ -172,10 +184,14 @@ int disk_vfs_mkdir(struct vfs* root, const char* path) {
                         current_dir = make_directory_brother(current_dir, dir, len);
                         // physically create dir
                         char * full_path = get_full_path(root->root->name, path);
-                        int success = mkdir(full_path, S_IRWXU | S_IRGRP | S_IROTH);
+                        int success = mkdir(full_path,S_IRWXU | S_IRGRP | S_IROTH);
+                        if (success != 0 && opendir(full_path) == NULL) {
+                            free(dir);
+                            return 0;
+                        }
                         free(full_path);
                         printf("created: %s\n", current_dir->name);
-                        if (!current_dir || success != 0){
+                        if (!current_dir){
                             printf("error\n");
                             free(dir);
                             return 0;
@@ -283,8 +299,14 @@ struct vfile* disk_vfile_open(struct vfs* root, const char* file_name) {
                     if (check_words(current_file->name, name, len)) {
                         free(name);
                         current_file->open = 1;
-                        //                        current_file->cursor = 0;
-                        return current_file;
+                        // current_file->cursor = 0;
+                        // TODO open existing file
+                        int fd = open(current_file->full_path, O_RDWR);
+                        if (fd < 0)
+                            return NULL;
+                        current_file->fd = fd;
+                        
+                    return current_file;
                     }
                     else if (current_file->next == NULL) {
                         caffe = 0;
@@ -295,16 +317,16 @@ struct vfile* disk_vfile_open(struct vfs* root, const char* file_name) {
                 // create file and append to current_file
                 // TODO Physically create file
                 char * full_path = get_full_path(root->root->name, file_name);
-                int file = creat(full_path, S_IRWXU | S_IRGRP | S_IROTH);
+//                int file = creat(full_path, S_IRWXU | S_IRGRP | S_IROTH);
+                int file = open(full_path, O_RDWR | O_CREAT , S_IRWXU | S_IRGRP | S_IROTH);
                 if (file < 0) {
                     free(name);
                     free(full_path);
                     return NULL;
                 }
-                struct vfile * brother_file = new_vfile_disk_struct(name, len, file);
+                struct vfile * brother_file = new_vfile_disk_struct(name, len, file, full_path);
                 current_file->next = brother_file;
                 free(name);
-                free(full_path);
                 printf("created %s at line %d\n", brother_file->name, __LINE__);
                 return brother_file;
                 
@@ -314,17 +336,16 @@ struct vfile* disk_vfile_open(struct vfs* root, const char* file_name) {
                 
                 // TODO physically create file
                 char * full_path = get_full_path(root->root->name, file_name);
-//                FILE * disk_file = fopen(file_name, "rw");
-                int file = creat(full_path, S_IRWXU | S_IRGRP | S_IROTH);
+//                int file = creat(full_path, S_IRWXU | S_IRGRP | S_IROTH);
+                int file = open(full_path, O_RDWR | O_CREAT , S_IRWXU | S_IRGRP | S_IROTH);
                 if (file < 0) {
                     free(name);
                     free(full_path);
                     return NULL;
                 }
-                struct vfile * child_file = new_vfile_disk_struct(name, len, file);
+                struct vfile * child_file = new_vfile_disk_struct(name, len, file, full_path);
                 current_dir->vfile = child_file;
                 free(name);
-                free(full_path);
                 printf("created %s at line %d\n", child_file->name, __LINE__);
                 return child_file;
             }
@@ -337,16 +358,90 @@ struct vfile* disk_vfile_open(struct vfs* root, const char* file_name) {
 }
 
 int disk_vfile_write(struct vfile* f, const char* data, size_t data_len) {
-    return -1;
+    if ((!f) || (f->open == 0) || (!f->fd))
+        return 0;
+    ssize_t success;
+    if (!f->data) {
+        char * buffer = malloc((data_len+1)*sizeof(char));
+        copy_data(buffer, data, data_len+1);
+        f->data = buffer;
+        f->length = data_len;
+        f->cursor = data_len;
+    }
+    else if (f->length > f->cursor + data_len) {
+        char * buffer = f->data;
+        copy_data_no_end_char(&buffer[f->cursor], data, data_len+1);
+        f->data = buffer;
+        f->cursor = f->cursor + data_len;
+    }
+    else {
+        char * buffer = f->data;
+        buffer = realloc(buffer, f->cursor + data_len+1);
+        copy_data(&buffer[f->cursor], data, data_len+1);
+        f->length = f->cursor + data_len;;
+        f->cursor = f->length;
+        f->data = buffer;
+    }
+    success = write(f->fd, data, data_len);
+    if (!f->data || success < 0) {
+        return 0;
+    }
+    
+    return 1;
 }
 
 int disk_vfile_append(struct vfile* f, const char* data, size_t data_len) {
-    return -1;
+    if ((!f) || (f->open == 0) || (!f->fd))
+        return 0;
+    ssize_t success;
+    if (!f->data) {
+        char * buffer = malloc((data_len+1)*sizeof(char));
+        copy_data(buffer, data, data_len+1);
+        f->data = buffer;
+        f->length = data_len;
+    }
+    else {
+        char * buffer = f->data;
+        size_t len =f->length + data_len;
+        buffer = realloc(buffer, len+1);
+        copy_data(&buffer[f->length], data, data_len+1);
+        f->data = buffer;
+        f->length = len;
+    }
+    if (f->cursor != f->length) {
+        close(f->fd);
+        int fd = open(f->full_path, O_APPEND | O_RDWR);
+        if (fd < 0)
+            return 0;
+        f->fd = fd;
+    }
+    f->cursor = f->length;
+    
+    success = write(f->fd, data, data_len+1);
+    if (!f->data || success < 0) {
+        return 0;
+    }
+    return 1;
 }
 
 size_t disk_vfile_read(struct vfile* f, char* data, size_t data_len) {
-    return -1;
+    if ((!f) || (f->open == 0) || (!f->data) || (!f->fd))
+        return 0;
+    // TODO not sure what I have to do;
+    //    (IFEXPRESSION) ? (THENEXPR) : (ELSEEXPR);
+    ssize_t success;
+    size_t to_read;
+    (f->length > f->cursor + data_len) ? (to_read = data_len) : (to_read = f->length);
+    copy_data_no_end_char(data, &f->data[f->cursor], to_read+1);
+    success = read(f->fd, data, to_read+1);
+    if (success < 0)
+        return 0;
+    f->cursor = f->cursor + to_read;
+    
+    return to_read;
 }
 
 void disk_vfile_close(struct vfile* f) {
+    close(f->fd);
+    memory_vfile_close(f);
 }

@@ -184,7 +184,8 @@ struct vfile * new_vfile_memory_struct(char * name, size_t len) {
         this->length = 0;
         this->cursor = 0;
         this->type = VFS_MEMORY;
-        this->disk_file = -1;
+        this->fd = -1;
+        this->full_path = NULL;
     }
     
     return this;
@@ -196,6 +197,8 @@ void destroy_vfile(struct vfile * file) {
     if (file) {
         free((void *)file->name);
         free((void *)file->data);
+        if (file->full_path)
+            free(file->full_path);
         free(file);
     }
 }

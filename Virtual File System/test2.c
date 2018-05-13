@@ -16,7 +16,7 @@
 //static char txt2[1024];
 //
 //static const int   NFILES = 100;
-//static const char* root = "/tmp/test";
+//static const char* root = "/Users/Susy/Desktop/tmp";
 //static const int   NFOLDERS = 10;
 //static const char* folders[] = { "//f1",       "f1/f2/",     "f1/f2/f3//",
 //                                 "another",    "f",          "f//o//",
@@ -112,11 +112,11 @@
 //{
 //  // removes the folder created by the FILE virtual file system
 //    /* comment cause not implemented yet */
-////  system("rm -rf /tmp/test");
-////  run_test(VFS_DISK, 0);
-//  run_test(VFS_MEMORY, 0);
-////  run_test(VFS_DISK, 1);
-//  run_test(VFS_MEMORY, 1);
+//  system("rm -rf /Users/Susy/Desktop/tmp");
+//  run_test(VFS_DISK, 0);
+////  run_test(VFS_MEMORY, 0);
+//  run_test(VFS_DISK, 1);
+////  run_test(VFS_MEMORY, 1);
 //
 //  return EXIT_SUCCESS;
 //}
