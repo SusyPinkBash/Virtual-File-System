@@ -246,7 +246,7 @@ int memory_vfs_mkdir(struct vfs* root, const char* path) {
     struct directory * current_dir = root->root;
     size_t path_len = (size_t)strlen(path);
     int start = 0;
-    printf("called dir with path: %s\n", path);
+//    printf("called dir with path: %s\n", path);
     path_len = get_length_without_slashes(path);
     for (int c = 0; c <= path_len; ++c) {
         size_t len = c-start+1;
@@ -262,7 +262,7 @@ int memory_vfs_mkdir(struct vfs* root, const char* path) {
             copy_data(dir, &path[start], len);
             if (current_dir->child == NULL) {
                 current_dir = make_directory_child(current_dir, dir, len);
-                printf("created: %s\n", current_dir->name);
+//                printf("created: %s\n", current_dir->name);
                 if (!current_dir){
                     printf("error\n");
                     free(dir);
@@ -278,7 +278,7 @@ int memory_vfs_mkdir(struct vfs* root, const char* path) {
                     }
                     else if (current_dir->next == NULL) {
                         current_dir = make_directory_brother(current_dir, dir, len);
-                        printf("created: %s\n", current_dir->name);
+//                        printf("created: %s\n", current_dir->name);
                         if (!current_dir){
                             printf("error\n");
                             free(dir);
@@ -381,7 +381,7 @@ int memory_vfs_mkdir(struct vfs* root, const char* path) {
 
 /* uncomment if mkdir should create only the last folder */
 struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
-    printf("called vfile with path: %s\n", file_name);
+//    printf("called vfile with path: %s\n", file_name);
     if (root->root == NULL)
         return NULL;
     struct directory * current_dir = root->root;
@@ -450,7 +450,7 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
                 struct vfile * brother_file = new_vfile_memory_struct(name, len);
                 current_file->next = brother_file;
                 free(name);
-                printf("created %s at line %d\n", brother_file->name, __LINE__);
+//                printf("created %s at line %d\n", brother_file->name, __LINE__);
                 return brother_file;
                 
             }
@@ -459,7 +459,7 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
                 struct vfile * child_file = new_vfile_memory_struct(name, len);
                 current_dir->vfile = child_file;
                 free(name);
-                printf("created %s at line %d\n", child_file->name, __LINE__);
+//                printf("created %s at line %d\n", child_file->name, __LINE__);
                 return child_file;
             }
             

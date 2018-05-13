@@ -125,14 +125,14 @@ struct vfs* disk_vfs_open(enum vfs_type type, const char* root_folder) {
     
     //    Function: int mkdir (const char *filename, mode_t mode)
     int success = mkdir(root_folder, S_IRWXU | S_IRGRP | S_IROTH);
-        if (success != 0 && opendir(root_folder) == NULL) {
-            free(this);
-            return NULL;
-        }
-//        if (success != 0) {
-//            free(this);
-//            return NULL;
-//        }
+    if (success != 0 && opendir(root_folder) == NULL) {
+        free(this);
+        return NULL;
+    }
+    //        if (success != 0) {
+    //            free(this);
+    //            return NULL;
+    //        }
     return this;
 }
 
@@ -142,7 +142,7 @@ int disk_vfs_mkdir(struct vfs* root, const char* path) {
     struct directory * current_dir = root->root;
     size_t path_len = (size_t)strlen(path);
     int start = 0;
-    printf("called dir with path: %s\n", path);
+//    printf("called dir with path: %s\n", path);
     path_len = get_length_without_slashes(path);
     for (int c = 0; c <= path_len; ++c) {
         size_t len = c-start+1;
@@ -171,7 +171,7 @@ int disk_vfs_mkdir(struct vfs* root, const char* path) {
                     free(dir);
                     return 0;
                 }
-                printf("created: %s\n", current_dir->name);
+//                printf("created: %s\n", current_dir->name);
             }
             else {
                 current_dir = current_dir->child;
@@ -190,7 +190,7 @@ int disk_vfs_mkdir(struct vfs* root, const char* path) {
                             return 0;
                         }
                         free(full_path);
-                        printf("created: %s\n", current_dir->name);
+//                        printf("created: %s\n", current_dir->name);
                         if (!current_dir){
                             printf("error\n");
                             free(dir);
@@ -243,7 +243,7 @@ void disk_vfs_close(struct vfs* root) {
 }
 
 struct vfile* disk_vfile_open(struct vfs* root, const char* file_name) {
-    printf("called vfile with path: %s\n", file_name);
+//    printf("called vfile with path: %s\n", file_name);
     if (root->root == NULL)
         return NULL;
     struct directory * current_dir = root->root;
@@ -304,9 +304,12 @@ struct vfile* disk_vfile_open(struct vfs* root, const char* file_name) {
                         int fd = open(current_file->full_path, O_RDWR);
                         if (fd < 0)
                             return NULL;
+                        // TODO all fild fields
+                        
                         current_file->fd = fd;
                         
-                    return current_file;
+                        
+                        return current_file;
                     }
                     else if (current_file->next == NULL) {
                         caffe = 0;
@@ -317,7 +320,7 @@ struct vfile* disk_vfile_open(struct vfs* root, const char* file_name) {
                 // create file and append to current_file
                 // TODO Physically create file
                 char * full_path = get_full_path(root->root->name, file_name);
-//                int file = creat(full_path, S_IRWXU | S_IRGRP | S_IROTH);
+                //                int file = creat(full_path, S_IRWXU | S_IRGRP | S_IROTH);
                 int file = open(full_path, O_RDWR | O_CREAT , S_IRWXU | S_IRGRP | S_IROTH);
                 if (file < 0) {
                     free(name);
@@ -327,7 +330,7 @@ struct vfile* disk_vfile_open(struct vfs* root, const char* file_name) {
                 struct vfile * brother_file = new_vfile_disk_struct(name, len, file, full_path);
                 current_file->next = brother_file;
                 free(name);
-                printf("created %s at line %d\n", brother_file->name, __LINE__);
+//                printf("created %s at line %d\n", brother_file->name, __LINE__);
                 return brother_file;
                 
             }
@@ -336,7 +339,7 @@ struct vfile* disk_vfile_open(struct vfs* root, const char* file_name) {
                 
                 // TODO physically create file
                 char * full_path = get_full_path(root->root->name, file_name);
-//                int file = creat(full_path, S_IRWXU | S_IRGRP | S_IROTH);
+                //                int file = creat(full_path, S_IRWXU | S_IRGRP | S_IROTH);
                 int file = open(full_path, O_RDWR | O_CREAT , S_IRWXU | S_IRGRP | S_IROTH);
                 if (file < 0) {
                     free(name);
@@ -346,7 +349,7 @@ struct vfile* disk_vfile_open(struct vfs* root, const char* file_name) {
                 struct vfile * child_file = new_vfile_disk_struct(name, len, file, full_path);
                 current_dir->vfile = child_file;
                 free(name);
-                printf("created %s at line %d\n", child_file->name, __LINE__);
+//                printf("created %s at line %d\n", child_file->name, __LINE__);
                 return child_file;
             }
             
@@ -425,22 +428,25 @@ int disk_vfile_append(struct vfile* f, const char* data, size_t data_len) {
 }
 
 size_t disk_vfile_read(struct vfile* f, char* data, size_t data_len) {
+    printf("called read on: %s\n", f->name);
     if ((!f) || (!f->fd))
         return 0;
     // TODO not sure what I have to do;
     //    (IFEXPRESSION) ? (THENEXPR) : (ELSEEXPR);
     ssize_t success;
-    size_t to_read;
+//    size_t to_read;
 //    (f->length > f->cursor + data_len) ? (to_read = data_len) : (to_read = f->length);
-    (f->length > f->cursor + data_len) ? (to_read = data_len) : (to_read = f->length);
     
 //    copy_data_no_end_char(data, &f->data[f->cursor], to_read+1);
-    success = read(f->fd, data, to_read+1);
+//    success = read(f->fd, data, to_read+1);
+    success = read(f->fd, data, data_len+1);
     if (success < 0)
         return 0;
-//    f->cursor = f->cursor + to_read;
+    f->cursor = f->cursor + success;
     
-    return to_read;
+    printf("\t read : %zd\n", success);
+    
+    return success;
 }
 
 void disk_vfile_close(struct vfile* f) {
