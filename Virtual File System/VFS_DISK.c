@@ -152,7 +152,7 @@ int disk_vfs_mkdir(struct vfs* root, const char* path) {
                 current_dir = make_directory_child(current_dir, dir, len);
                 // physically create dir
                 char * full_path = get_full_path(root->root->name, path);
-                int success = mkdir(full_path, S_IRWXU | S_IRGRP | S_IROTH);
+                int success = mkdir(full_path,S_IRWXU | S_IRGRP | S_IROTH);
                 free(full_path);
                 if (!current_dir || success != 0){
                     printf("error\n");
@@ -295,7 +295,7 @@ struct vfile* disk_vfile_open(struct vfs* root, const char* file_name) {
                 // create file and append to current_file
                 // TODO Physically create file
                 char * full_path = get_full_path(root->root->name, file_name);
-                int file = creat(full_path, S_IRUSR | S_IRGRP | S_IROTH);
+                int file = creat(full_path, S_IRWXU | S_IRGRP | S_IROTH);
                 if (file < 0) {
                     free(name);
                     free(full_path);
@@ -315,7 +315,7 @@ struct vfile* disk_vfile_open(struct vfs* root, const char* file_name) {
                 // TODO physically create file
                 char * full_path = get_full_path(root->root->name, file_name);
 //                FILE * disk_file = fopen(file_name, "rw");
-                int file = creat(full_path, S_IRUSR | S_IRGRP | S_IROTH);
+                int file = creat(full_path, S_IRWXU | S_IRGRP | S_IROTH);
                 if (file < 0) {
                     free(name);
                     free(full_path);
