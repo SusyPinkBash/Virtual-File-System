@@ -10,7 +10,9 @@
 #include "VFS_DISK.h"
 #include "VFS_MEMORY.h"
 #include <string.h>
+#include "stdio.h"
 #include <sys/stat.h>
+#include <fcntl.h>
 
 /*
  struct vfs {
@@ -41,6 +43,16 @@
 
 // ########## HELPER FUNCTIONS ##########
 
+char * get_full_path(const char * root_name, const char * path) {
+    size_t root_path_len = (size_t)strlen(root_name);
+    size_t path_len = (size_t)strlen(path);
+    char * full_path = malloc((root_path_len + path_len+2)*sizeof(char));
+    copy_data_no_end_char(full_path, root_name, root_path_len+1);
+    full_path[root_path_len] = '/';
+    copy_data(&full_path[root_path_len+1], path, path_len+1);
+    return full_path;
+}
+
 // ##### VFS #####
 
 /* creates a vfs struct with its vtable and a null root node  */
@@ -65,6 +77,35 @@ struct vfs * new_vfs_disk_struct(enum vfs_type type) {
 };
 
 // ##### VFILE #####
+/* creates a vfile struct with its vtable  */
+struct vfile * new_vfile_disk_struct(char * name, size_t len, int file_call) {
+    /* vtable for the MEMORY_VFS vfs */
+    static const struct VFILE_vtable vtable = {
+        .vfile_write = disk_vfile_write,
+        .vfile_append = disk_vfile_append,
+        .vfile_read = disk_vfile_read,
+        .vfile_close = disk_vfile_close,
+    };
+    
+    /* allocats memory for the MEMORY_VFS struct */
+    struct vfile * this = malloc(sizeof(struct vfile));
+    
+    if (this) {
+        this->vtable = &vtable;
+        char * title = malloc(len*sizeof(char));
+        copy_data(title, name, len);
+        this->name = title;
+        this->data = NULL;
+        this->next = NULL;
+        this->open = 1;
+        this->length = 0;
+        this->cursor = 0;
+        this->type = VFS_MEMORY;
+        this->disk_file = file_call;
+    }
+    
+    return this;
+};
 
 // ######### MEMORY GIVEN FUNCTIONS TO IMPLEMENT ##########
 
@@ -109,12 +150,8 @@ int disk_vfs_mkdir(struct vfs* root, const char* path) {
             copy_data(dir, &path[start], len);
             if (current_dir->child == NULL) {
                 current_dir = make_directory_child(current_dir, dir, len);
-                // TODO physically create dir
-                size_t root_path_len = (size_t)strlen(root->root->name);
-                char * full_path = malloc((root_path_len + path_len+2)*sizeof(char));
-                copy_data_no_end_char(full_path, root->root->name, root_path_len+1);
-                full_path[root_path_len] = '/';
-                copy_data(&full_path[root_path_len+1], path, path_len+1);
+                // physically create dir
+                char * full_path = get_full_path(root->root->name, path);
                 int success = mkdir(full_path, S_IRWXU | S_IRGRP | S_IROTH);
                 free(full_path);
                 if (!current_dir || success != 0){
@@ -133,12 +170,8 @@ int disk_vfs_mkdir(struct vfs* root, const char* path) {
                     }
                     else if (current_dir->next == NULL) {
                         current_dir = make_directory_brother(current_dir, dir, len);
-                        // TODO physically create dir
-                        size_t root_path_len = (size_t)strlen(root->root->name);
-                        char * full_path = malloc((root_path_len + path_len+2)*sizeof(char));
-                        copy_data_no_end_char(full_path, root->root->name, root_path_len+1);
-                        full_path[root_path_len] = '/';
-                        copy_data(&full_path[root_path_len+1], path, path_len+1);
+                        // physically create dir
+                        char * full_path = get_full_path(root->root->name, path);
                         int success = mkdir(full_path, S_IRWXU | S_IRGRP | S_IROTH);
                         free(full_path);
                         printf("created: %s\n", current_dir->name);
@@ -194,6 +227,112 @@ void disk_vfs_close(struct vfs* root) {
 }
 
 struct vfile* disk_vfile_open(struct vfs* root, const char* file_name) {
+    printf("called vfile with path: %s\n", file_name);
+    if (root->root == NULL)
+        return NULL;
+    struct directory * current_dir = root->root;
+    int path_len = (int)strlen(file_name);
+    for (int c =0, start = 0; c <= path_len; ++c) {
+        if (c == 0 && file_name[c] == '/') {
+            while (file_name[c+1] == '/') {
+                c++;
+            }
+            start = c + 1;
+            continue;
+        }
+        else if (file_name[c] == '/') {
+            size_t len = c-start+1;
+            char * dir = malloc(len*sizeof(char));
+            copy_data(dir, &file_name[start], len);
+            if (current_dir->child == NULL) {
+                free(dir);
+                return NULL;
+            }
+            else {
+                current_dir = current_dir->child;
+                int caffe = 1;
+                while (caffe) {
+                    if (check_words(current_dir->name, dir, len)) {
+                        caffe = 0;
+                    }
+                    else if (current_dir->next == NULL) {
+                        free(dir);
+                        return NULL;
+                    }
+                    else
+                        current_dir = current_dir->next;
+                }
+            }
+            
+            //            free(dir);
+            while(file_name[c+1] == '/' && c < path_len)
+            {
+                ++c;
+            }
+            start = c +1;
+        }
+        else if (c==path_len) {
+            size_t len = c-start+1;
+            char * name = malloc((1+len)*sizeof(char));
+            copy_data(name, &file_name[start], len+1);
+            
+            if (current_dir->vfile) {
+                struct vfile * current_file = current_dir->vfile;
+                int caffe = 1;
+                while (caffe) {
+                    if (check_words(current_file->name, name, len)) {
+                        free(name);
+                        current_file->open = 1;
+                        //                        current_file->cursor = 0;
+                        return current_file;
+                    }
+                    else if (current_file->next == NULL) {
+                        caffe = 0;
+                    }
+                    else
+                        current_file = current_file->next;
+                }
+                // create file and append to current_file
+                // TODO Physically create file
+                char * full_path = get_full_path(root->root->name, file_name);
+                int file = creat(full_path, S_IRUSR | S_IRGRP | S_IROTH);
+                if (file < 0) {
+                    free(name);
+                    free(full_path);
+                    return NULL;
+                }
+                struct vfile * brother_file = new_vfile_disk_struct(name, len, file);
+                current_file->next = brother_file;
+                free(name);
+                free(full_path);
+                printf("created %s at line %d\n", brother_file->name, __LINE__);
+                return brother_file;
+                
+            }
+            else {
+                // no files, create one and add it to dir
+                
+                // TODO physically create file
+                char * full_path = get_full_path(root->root->name, file_name);
+//                FILE * disk_file = fopen(file_name, "rw");
+                int file = creat(full_path, S_IRUSR | S_IRGRP | S_IROTH);
+                if (file < 0) {
+                    free(name);
+                    free(full_path);
+                    return NULL;
+                }
+                struct vfile * child_file = new_vfile_disk_struct(name, len, file);
+                current_dir->vfile = child_file;
+                free(name);
+                free(full_path);
+                printf("created %s at line %d\n", child_file->name, __LINE__);
+                return child_file;
+            }
+            
+        }
+    }
+    
+    printf("returnin from  %d\n", __LINE__);
     return NULL;
 }
 

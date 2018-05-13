@@ -36,20 +36,23 @@ assert_folder(const char* path)
 int
 main()
 {
+    struct vfile *f;
 //    struct vfile *f, *f2;
 //    size_t s;
-//    struct vfs*   vfs = vfs_open(VFS_DISK, "/temporary");
+    struct vfs*   vfs = vfs_open(VFS_DISK, "/temporary");
 //    struct vfs*   vfs = vfs_open(VFS_DISK, "/Users/Susy/Desktop/temp");
-    struct vfs*   vfs = vfs_open(VFS_MEMORY, "/temporary");
+//    struct vfs*   vfs = vfs_open(VFS_MEMORY, "/temporary");
     assert(vfs);
     assert(vfs_mkdir(vfs, "l1/l2/l3") == 0);
 //    //    assert(vfs_mkdir(vfs, "l1/l2/l3") == 1);
     assert(vfs_mkdir(vfs, "l1"));
     assert(vfs_mkdir(vfs, "l1/l2"));
+    assert(vfs_mkdir(vfs, "l1/l2"));
     assert(vfs_mkdir(vfs, "l1/l2/l3"));
     assert_folder("/temporary/l1/l2/l3");
 //    assert_folder("/Users/Susy/Desktop/l1/l2/l3");
-//    f = vfile_open(vfs, "/l1/l2/first.txt");
+    f = vfile_open(vfs, "/l1/l2/first.txt");
+    assert(f);
 //    vfile_write(f, txt1, strlen(txt1));
 //    vfile_close(f);
 //    f = vfile_open(vfs, "/l1/l2/first.txt");

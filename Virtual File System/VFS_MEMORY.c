@@ -161,7 +161,7 @@ struct directory * make_directory_brother(struct directory * before, char * dir_
 
 // ##### VFILE #####
 /* creates a vfile struct with its vtable  */
-struct vfile * new_vfile_struct(char * name, size_t len) {
+struct vfile * new_vfile_memory_struct(char * name, size_t len) {
     /* vtable for the MEMORY_VFS vfs */
     static const struct VFILE_vtable vtable = {
         .vfile_write = memory_vfile_write,
@@ -184,6 +184,7 @@ struct vfile * new_vfile_struct(char * name, size_t len) {
         this->length = 0;
         this->cursor = 0;
         this->type = VFS_MEMORY;
+        this->disk_file = -1;
     }
     
     return this;
@@ -443,7 +444,7 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
                         current_file = current_file->next;
                 }
                 // create file and append to current_file
-                struct vfile * brother_file = new_vfile_struct(name, len);
+                struct vfile * brother_file = new_vfile_memory_struct(name, len);
                 current_file->next = brother_file;
                 free(name);
                 printf("created %s at line %d\n", brother_file->name, __LINE__);
@@ -452,7 +453,7 @@ struct vfile* memory_vfile_open(struct vfs* root, const char* file_name) {
             }
             else {
                 // no files, create one and add it to dir
-                struct vfile * child_file = new_vfile_struct(name, len);
+                struct vfile * child_file = new_vfile_memory_struct(name, len);
                 current_dir->vfile = child_file;
                 free(name);
                 printf("created %s at line %d\n", child_file->name, __LINE__);
