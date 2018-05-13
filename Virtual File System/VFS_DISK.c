@@ -9,17 +9,82 @@
 
 #include "VFS_DISK.h"
 #include "VFS_MEMORY.h"
+#include <string.h>
+#include <sys/stat.h>
 
+/*
+ struct vfs {
+ const struct VFS_vtable * vtable;
+ struct directory * root;
+ enum vfs_type type;
+ };
+ 
+ struct vfile {
+ const struct VFILE_vtable * vtable;
+ const char * name;
+ char * data;
+ size_t length;
+ size_t cursor;
+ int open;
+ struct vfile * next;
+ enum vfs_type type;
+ };
+ 
+ 
+ struct directory {
+ const char * name;
+ struct directory * next;
+ struct directory * child;
+ struct vfile * vfile;
+ };
+ */
 
-struct VFS_DISK {
-    struct vfs vfs;
+// ########## HELPER FUNCTIONS ##########
+
+// ##### VFS #####
+
+/* creates a vfs struct with its vtable and a null root node  */
+struct vfs * new_vfs_disk_struct(enum vfs_type type) {
+    /* vtable for the MEMORY_VFS vfs */
+    static const struct VFS_vtable vtable = {
+        .vfs_open = disk_vfs_open,
+        .vfs_mkdir = disk_vfs_mkdir,
+        .vfs_close = disk_vfs_close,
+        .vfile_open =  disk_vfile_open,
+    };
     
+    /* allocats memory for the MEMORY_VFS struct */
+    struct vfs * this = malloc(sizeof(struct vfs));
+    if (this) {
+        this->vtable = &vtable;
+        this->root = NULL;
+        this->type = type;
+    }
+    
+    return this;
 };
 
+// ##### VFILE #####
+
+// ######### MEMORY GIVEN FUNCTIONS TO IMPLEMENT ##########
 
 
-struct vfs* disk_vfs_open(const char* root_folder) {
-    return NULL;
+/* Initializes the virtual file system of type t starting from
+ root_folder and returns the points to the root */
+struct vfs* disk_vfs_open(enum vfs_type type, const char* root_folder) {
+    struct vfs * this = new_vfs_disk_struct(type);
+    if (!this) {
+        printf("error\n");
+        return NULL;
+    }
+    this->root = new_directory(root_folder, (strlen(root_folder)+1));
+    
+//    Function: int mkdir (const char *filename, mode_t mode)
+    int success = mkdir(root_folder, S_IRWXU | S_IRGRP | S_IROTH);
+    if (success != 0)
+        return NULL;
+    
+    return this;
 }
 
 int disk_vfs_mkdir(struct vfs* root, const char* path) {

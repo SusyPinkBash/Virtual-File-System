@@ -80,7 +80,7 @@ size_t get_length_without_slashes(const char *path) {
 // ##### VFS #####
 
 /* creates a vfs struct with its vtable and a null root node  */
-struct vfs * new_vfs_struct(enum vfs_type type) {
+struct vfs * new_vfs_memory_struct(enum vfs_type type) {
     /* vtable for the MEMORY_VFS vfs */
     static const struct VFS_vtable vtable = {
         .vfs_open = memory_vfs_open,
@@ -214,9 +214,10 @@ void destroy_file_list (struct vfile * this) {
 
 // ######### MEMORY GIVEN FUNCTIONS TO IMPLEMENT ##########
 
-/*  */
+/* Initializes the virtual file system of type t starting from
+   root_folder and returns the points to the root */
 struct vfs* memory_vfs_open(enum vfs_type type, const char* root_folder) {
-    struct vfs * this = new_vfs_struct(type);
+    struct vfs * this = new_vfs_memory_struct(type);
     if (!this) {
         printf("error\n");
         return NULL;

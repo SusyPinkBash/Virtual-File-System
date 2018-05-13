@@ -29,6 +29,7 @@ size_t memory_vfile_read(struct vfile* f, char* data, size_t data_len);
 void memory_vfile_close(struct vfile* f);
 
 // other functions declarations
+struct directory * new_directory(const char* folder, size_t len);
 void destroy_file_list (struct vfile * this);
 void destroy_vfile(struct vfile * file);
 

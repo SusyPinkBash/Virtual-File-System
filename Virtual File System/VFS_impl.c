@@ -17,7 +17,7 @@ struct vfs* vfs_open(enum vfs_type t, const char* root_folder) {
         return memory_vfs_open(t, root_folder);
     }
     else if (t == VFS_DISK){
-        return disk_vfs_open(root_folder);
+        return disk_vfs_open(t, root_folder);
     }
     return NULL;
 }
