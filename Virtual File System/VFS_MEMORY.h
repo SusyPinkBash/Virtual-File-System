@@ -29,9 +29,16 @@ size_t memory_vfile_read(struct vfile* f, char* data, size_t data_len);
 void memory_vfile_close(struct vfile* f);
 
 // other functions declarations
+int check_words(const char * dir, char * to_check, size_t len);
+void * copy_data_no_end_char(char * to, const char * from, size_t len);
+void * copy_data(char * to, const char * from, size_t len);
+size_t get_length_without_slashes(const char *path);
 struct directory * new_directory(const char* folder, size_t len);
+struct directory * make_directory_child(struct directory * parent, char * dir_name, size_t len);
+struct directory * make_directory_brother(struct directory * before, char * dir_name, size_t len);
 void destroy_file_list (struct vfile * this);
 void destroy_vfile(struct vfile * file);
+
 
 
 #endif /* VFS_MEMORY_h */

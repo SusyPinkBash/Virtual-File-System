@@ -24,13 +24,13 @@
 //
 //static char txt2[1024];
 //
-//static int
-//assert_folder(const char* path)
-//{
-//    struct stat s;
-//    return (stat(path, &s) == 0 && S_ISDIR(s.st_mode) && (s.st_mode & S_IRUSR) &&
-//            (s.st_mode & S_IWUSR) && (s.st_mode & S_IXUSR));
-//}
+static int
+assert_folder(const char* path)
+{
+    struct stat s;
+    return (stat(path, &s) == 0 && S_ISDIR(s.st_mode) && (s.st_mode & S_IRUSR) &&
+            (s.st_mode & S_IWUSR) && (s.st_mode & S_IXUSR));
+}
 
 
 int
@@ -38,15 +38,17 @@ main()
 {
 //    struct vfile *f, *f2;
 //    size_t s;
-    struct vfs*   vfs = vfs_open(VFS_DISK, "/temporary");
-//    struct vfs*   vfs = vfs_open(VFS_MEMORY, "/temporary");
+//    struct vfs*   vfs = vfs_open(VFS_DISK, "/temporary");
+//    struct vfs*   vfs = vfs_open(VFS_DISK, "/Users/Susy/Desktop/temp");
+    struct vfs*   vfs = vfs_open(VFS_MEMORY, "/temporary");
     assert(vfs);
-//    assert(vfs_mkdir(vfs, "l1/l2/l3") == 0);
+    assert(vfs_mkdir(vfs, "l1/l2/l3") == 0);
 //    //    assert(vfs_mkdir(vfs, "l1/l2/l3") == 1);
-//    assert(vfs_mkdir(vfs, "l1"));
-//    assert(vfs_mkdir(vfs, "l1/l2"));
-//    assert(vfs_mkdir(vfs, "l1/l2/l3"));
-//    assert_folder("/temporary/l1/l2/l3");
+    assert(vfs_mkdir(vfs, "l1"));
+    assert(vfs_mkdir(vfs, "l1/l2"));
+    assert(vfs_mkdir(vfs, "l1/l2/l3"));
+    assert_folder("/temporary/l1/l2/l3");
+//    assert_folder("/Users/Susy/Desktop/l1/l2/l3");
 //    f = vfile_open(vfs, "/l1/l2/first.txt");
 //    vfile_write(f, txt1, strlen(txt1));
 //    vfile_close(f);

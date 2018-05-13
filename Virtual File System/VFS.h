@@ -12,8 +12,8 @@ enum vfs_type
 };
 
 
-// Initializes the virtual file system of type t starting from
-// root_folder and returns the points to the root
+/* Initializes the virtual file system of type t starting from
+ root_folder and returns the points to the root */
 struct vfs* vfs_open(enum vfs_type t, const char* root_folder);
 
 // Creates the specified directory specified by the absolute path and

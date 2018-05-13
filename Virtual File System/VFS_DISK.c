@@ -88,10 +88,109 @@ struct vfs* disk_vfs_open(enum vfs_type type, const char* root_folder) {
 }
 
 int disk_vfs_mkdir(struct vfs* root, const char* path) {
-    return -1;
+    if (!root)
+        return 0;
+    struct directory * current_dir = root->root;
+    size_t path_len = (size_t)strlen(path);
+    int start = 0;
+    printf("called dir with path: %s\n", path);
+    path_len = get_length_without_slashes(path);
+    for (int c = 0; c <= path_len; ++c) {
+        size_t len = c-start+1;
+        if (c == 0 && path[c] == '/') {
+            while (path[c+1] == '/') {
+                c++;
+            }
+            start = c+1;
+            continue;
+        }
+        else if (c==path_len) {
+            char * dir = malloc(len*sizeof(char));
+            copy_data(dir, &path[start], len);
+            if (current_dir->child == NULL) {
+                current_dir = make_directory_child(current_dir, dir, len);
+                // TODO physically create dir
+                size_t root_path_len = (size_t)strlen(root->root->name);
+                char * full_path = malloc((root_path_len + path_len+2)*sizeof(char));
+                copy_data_no_end_char(full_path, root->root->name, root_path_len+1);
+                full_path[root_path_len] = '/';
+                copy_data(&full_path[root_path_len+1], path, path_len+1);
+                int success = mkdir(full_path, S_IRWXU | S_IRGRP | S_IROTH);
+                free(full_path);
+                if (!current_dir || success != 0){
+                    printf("error\n");
+                    free(dir);
+                    return 0;
+                }
+                printf("created: %s\n", current_dir->name);
+            }
+            else {
+                current_dir = current_dir->child;
+                int caffe = 1;
+                while (caffe) {
+                    if (check_words(current_dir->name, dir,len)) {
+                        caffe = 0;
+                    }
+                    else if (current_dir->next == NULL) {
+                        current_dir = make_directory_brother(current_dir, dir, len);
+                        // TODO physically create dir
+                        size_t root_path_len = (size_t)strlen(root->root->name);
+                        char * full_path = malloc((root_path_len + path_len+2)*sizeof(char));
+                        copy_data_no_end_char(full_path, root->root->name, root_path_len+1);
+                        full_path[root_path_len] = '/';
+                        copy_data(&full_path[root_path_len+1], path, path_len+1);
+                        int success = mkdir(full_path, S_IRWXU | S_IRGRP | S_IROTH);
+                        free(full_path);
+                        printf("created: %s\n", current_dir->name);
+                        if (!current_dir || success != 0){
+                            printf("error\n");
+                            free(dir);
+                            return 0;
+                        }
+                        caffe = 0;
+                    }
+                    else
+                        current_dir = current_dir->next;
+                }
+            }
+        }
+        else if (path[c] == '/') {
+            char * dir = malloc(len*sizeof(char));
+            copy_data(dir, &path[start], len);
+            if (current_dir->child == NULL) {
+                free(dir);
+                return 0;
+            }
+            else {
+                current_dir = current_dir->child;
+                int caffe = 1;
+                while (caffe) {
+                    if (check_words(current_dir->name, dir,len)) {
+                        caffe = 0;
+                    }
+                    else if (current_dir->next == NULL) {
+                        free(dir);
+                        return 0;
+                    }
+                    else
+                        current_dir = current_dir->next;
+                }
+            }
+            free (dir);
+            while(path[c+1] == '/' && c < path_len)
+            {
+                ++c;
+            }
+            start = c+1;
+            if (current_dir->name == NULL)
+                printf("problem man\n");
+        }
+    }
+    return 1;
 }
 
 void disk_vfs_close(struct vfs* root) {
+    memory_vfs_close(root);
 }
 
 struct vfile* disk_vfile_open(struct vfs* root, const char* file_name) {
