@@ -38,7 +38,7 @@
 //  size_t        s;
 //  struct vfile *f, *f2;
 //  struct vfs*   vfs =
-//    vfs_open(t, "/tmp/test"); // 1 if folder exists with RWX permissions or
+//    vfs_open(t, "/Users/Susy/Desktop/tmp"); // 1 if folder exists with RWX permissions or
 //                              // creation is successfull
 //
 //  assert(vfs);
@@ -54,7 +54,7 @@
 //  assert(vfs_mkdir(vfs, "l1/l2/l3"));
 //
 //  if (t == VFS_DISK)
-//    assert(check_folder("/tmp/test/l1/l2/l3")); // absolute path include ROOT
+//    assert(check_folder("/Users/Susy/Desktop/tmp/l1/l2/l3")); // absolute path include ROOT
 //
 //  f = vfile_open(vfs, "/l1/l2/first.txt");
 //  vfile_write(f, txt1, strlen(txt1));
@@ -107,7 +107,7 @@
 //  system("rm -rf /tmp/test");
 //  run_test(VFS_DISK);
 //     */
-//  run_test(VFS_MEMORY);
+//  run_test(VFS_DISK);
 //
 //  return EXIT_SUCCESS;
 //}

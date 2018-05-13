@@ -425,18 +425,20 @@ int disk_vfile_append(struct vfile* f, const char* data, size_t data_len) {
 }
 
 size_t disk_vfile_read(struct vfile* f, char* data, size_t data_len) {
-    if ((!f) || (f->open == 0) || (!f->data) || (!f->fd))
+    if ((!f) || (!f->fd))
         return 0;
     // TODO not sure what I have to do;
     //    (IFEXPRESSION) ? (THENEXPR) : (ELSEEXPR);
     ssize_t success;
     size_t to_read;
+//    (f->length > f->cursor + data_len) ? (to_read = data_len) : (to_read = f->length);
     (f->length > f->cursor + data_len) ? (to_read = data_len) : (to_read = f->length);
-    copy_data_no_end_char(data, &f->data[f->cursor], to_read+1);
+    
+//    copy_data_no_end_char(data, &f->data[f->cursor], to_read+1);
     success = read(f->fd, data, to_read+1);
     if (success < 0)
         return 0;
-    f->cursor = f->cursor + to_read;
+//    f->cursor = f->cursor + to_read;
     
     return to_read;
 }
