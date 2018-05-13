@@ -67,7 +67,9 @@ main()
     vfile_append(f, "BYE", 3);
     vfile_close(f);
     f = vfile_open(vfs, "/l1/l2/l3/second.txt");
-    assert(vfile_read(f, txt2, 1024) == 8);
+    size_t lalala  =vfile_read(f, txt2, 1024);
+    printf("%zu\n", lalala);
+    assert(lalala == 8);
     assert(strncmp(txt2, "HELLOBYE", 8) == 0);
     vfile_write(f, txt1, strlen(txt1));
     vfile_close(f);

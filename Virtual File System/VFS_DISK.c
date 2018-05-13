@@ -443,6 +443,8 @@ size_t disk_vfile_read(struct vfile* f, char* data, size_t data_len) {
     if (success < 0)
         return 0;
     f->cursor = f->cursor + success;
+    if (success > strlen(data))
+        --success;
     
     printf("\t read : %zd\n", success);
     
